@@ -15,11 +15,14 @@ const
 for (const hostName in TRAFFIC_CONFIG) {
     _getBucketStatistics(hostName, function (error, bucketStatistics) {
         if (error) {
-            redisUtility.insertDataInRedis(hostName + '_bucket', JSON.stringify(Array.apply(null, {
-                length: 100
-            }).map(Function.call, function () {
-                return 0
-            })), function (error) {
+
+        	const hashKeyArray = [hostName + '_bucket'];
+        	for (var i = 0; i < 100; i++) {
+        		hashKeyArray.push(i);
+        		hashKeyArray.push(0);
+        	}
+
+            redisUtility.setHashMapAsArrayInRedis(hashKeyArray, function (error) {
                 console.log('Created bucket in redis for hostname: ' + hostName);
             });
         }
@@ -100,29 +103,24 @@ app.use(function (req, res, next) {
 
 function _getCurrentUserStatus(accessToken, hostName, callback) {
     const redisKey = hostName + '|' + accessToken;
-    redisUtility.fetchDataFromRedis(redisKey, function (error, userDetails) {
+    redisUtility.fetchDataFromRedis(redisKey, function (error, bucketId) {
         if (error) {
             callback(error);
             return;
         }
 
-        if (!userDetails) {
+        if (!bucketId) {
             callback(1);
             return;
         }
 
-        try {
-            const parsedUserDetails = JSON.parse(userDetails);
-            callback(null, parsedUserDetails);
-        } catch (e) {
-            callback(e);
-        }
+        callback(null, bucketId);
     });
 }
 
 function _getBucketStatistics(hostName, callback) {
     const redisKey = hostName + '_bucket';
-    redisUtility.fetchDataFromRedis(redisKey, function (error, bucketDetails) {
+    redisUtility.getAllHashMapValues(redisKey, function (error, bucketDetails) {
         if (error) {
             callback(error);
             return;
@@ -133,33 +131,46 @@ function _getBucketStatistics(hostName, callback) {
             return;
         }
 
-        try {
-            const parsedBucketDetails = JSON.parse(bucketDetails);
-            callback(null, parsedBucketDetails);
-        } catch (e) {
-            callback(e);
-        }
+        callback(bucketDetails);
     });
 }
 
-function _incrementBucketStatisticsValue(hostName, bucketIndex, bucketStatus, callback) {
+function _incrementBucketStatisticsValue(hostName, bucketIndex, updatedBucketValue, callback) {
     const bucketName = hostName + '_bucket';
-    bucketStatus[bucketIndex]++;
-    console.log('---------UPDATING BUCKET-----------');
-    console.log(String(bucketStatus));
-    console.log(bucketIndex);
-    console.log('---------UPDATING BUCKET-----------');
-    redisUtility.insertDataInRedis(bucketName, JSON.stringify(bucketStatus), callback);
+    redisUtility.setHashMapInRedis(bucketName, bucketIndex, updatedBucketValue, callback);
+}
+
+function _updateExpiryOfAccessToken(accessToken, hostName, callback) {
+    const userKeyInRedis = hostName + '|' + accessToken;
+    const ttlInDays = TRAFFIC_CONFIG[hostName].TTL || 1;
+    const ttlInSeconds = ttlInDays * 24 * 60 * 60;
+    redisUtility.updateExpiryOfKey(userKeyInRedis, ttlInSeconds, callback);
 }
 
 function _associateUserWithABucket(accessToken, hostName, bucketId, callback) {
     const userKeyInRedis = hostName + '|' + accessToken;
-    const userData = {
-        BUCKET_ID: bucketId,
-        LAST_USED: Date.now()
-    }
+    async.waterfall([
+        function (waterfallCallback) {
+            redisUtility.insertDataInRedis(userKeyInRedis, bucketId, function (redisInsertionError) {
+                waterfallCallback(redisInsertionError, bucketId);
+            });
+        },
 
-    redisUtility.insertDataInRedis(userKeyInRedis, JSON.stringify(userData), callback);
+        function (bucketId, waterfallCallback) {
+            _updateExpiryOfAccessToken(accessToken, hostName, function (updateError) {
+                waterfallCallback(updateError, bucketId);
+            });
+        },
+
+        function (bucketId, waterfallCallback) {
+            _addShadowKeyForUser(userKeyInRedis, bucketId, waterfallCallback);
+        }
+    ], callback);
+}
+
+function _addShadowKeyForUser(originalKeyName, bucketId, callback) {
+    const shadowKeyName = originalKeyName + '|shadow';
+    redisUtility.insertDataInRedis(shadowKeyName, bucketId, callback);
 }
 
 function _redirectToGrowth(req, res) {
@@ -183,20 +194,28 @@ app.use(function (req, res, next) {
     console.log('-------REACHED: Redirection of users who has been previously served a version----------');
     async.waterfall([
         function (waterfallCallback) {
-            _getCurrentUserStatus(currentAccessToken, hostName, function (userDetailsParseError, userDetails) {
-                waterfallCallback(userDetailsParseError, userDetails);
+            _getCurrentUserStatus(currentAccessToken, hostName, function (userDetailsParseError, fetchedBucketId) {
+                waterfallCallback(userDetailsParseError, fetchedBucketId);
             });
         },
 
-        function (userDetails, waterfallCallback) {
-            const bucketId = userDetails.BUCKET_ID + 1;
+        function (fetchedBucketId, waterfallCallback) {
+            _updateExpiryOfAccessToken(currentAccessToken, hostName, function (updateError) {
+                waterfallCallback(updateError, fetchedBucketId);
+            });
+        },
+
+        function (fetchedBucketId, waterfallCallback) {
+            const bucketId = fetchedBucketId + 1;
             const trafficDetails = TRAFFIC_CONFIG[hostName];
             if (trafficDetails.GROWTH_PERCENTAGE && trafficDetails.GROWTH_PERCENTAGE >= bucketId) {
                 waterfallCallback(null, 'REDIRECT_TO_GROWTH');
             } else {
                 waterfallCallback(null, 'REDIRECT_TO_PRODUCT');
             }
-        }
+        },
+
+
     ], function (error, redirectLocation) {
         if (error) {
             next();
@@ -221,7 +240,7 @@ app.use(function (req, res, next) {
 
         function (waterfallCallback) {
             _getBucketStatistics(hostName, function (bucketDetailsFetchError, fetchedBucketDetails) {
-                if (bucketDetailsFetchError || !fetchedBucketDetails || fetchedBucketDetails.length == 0) {
+                if ( bucketDetailsFetchError || !fetchedBucketDetails ) {
                     waterfallCallback(bucketDetailsFetchError || 'No bucket has been setup for this domain');
                 } else {
                     console.log(fetchedBucketDetails);
@@ -230,13 +249,15 @@ app.use(function (req, res, next) {
             });
         },
 
-        function (fetchedBucketDetails, waterfallCallback) {
+        function (fetchedBucketDetailsObj, waterfallCallback) {
+        	var fetchedBucketDetails = Object.keys( fetchedBucketDetailsObj ).map(function ( key ) { return fetchedBucketDetailsObj[key]; });
             const valueOfBucketWithMinimumUsers = Math.min.apply(null, fetchedBucketDetails);
             console.log('---------VALUE OF BUCKET WITH MINIMUM USERS----------');
             console.log(valueOfBucketWithMinimumUsers);
             console.log('---------VALUE OF BUCKET WITH MINIMUM USERS----------');
+            const updatedValueOfBucket = ++valueOfBucketWithMinimumUsers;
             const indexOfBucketWithMinimumUsers = fetchedBucketDetails.indexOf(valueOfBucketWithMinimumUsers);
-            _incrementBucketStatisticsValue(hostName, indexOfBucketWithMinimumUsers, fetchedBucketDetails, function (bucketStatisticsUpdateError) {
+            _incrementBucketStatisticsValue(hostName, indexOfBucketWithMinimumUsers, updatedValueOfBucket, function (bucketStatisticsUpdateError) {
                 if (bucketStatisticsUpdateError) {
                     waterfallCallback(bucketStatisticsUpdateError);
                 } else {
@@ -276,6 +297,61 @@ app.use(function (req, res, next) {
             _redirectToProduct(req, res);
         }
     });
+});
+
+function decrementBucketStatistics(hostName, bucketId, callback) {
+	const bucketName = hostName + '_bucket';
+    async.waterfall([
+        function (waterfallCallback) {
+            redisUtility.getHashMapInRedis(bucketName, bucketId, function (err, currentUserInBucket) {
+                waterfallCallback(err, currentUserInBucket);
+            });
+        },
+
+        function(currentUserInBucket, waterfallCallback) {
+        	const finalUsersInBucket = currentUserInBucket++;
+        	redisUtility.setHashMapInRedis(bucketName, bucketId, finalUsersInBucket, function (err, currentUserInBucket) {
+                waterfallCallback(err, currentUserInBucket);
+            });
+        }
+    ], callback);
+}
+
+function handleAccessTokenExpiry(accessTokenKey) {
+    const shadowKeyName = accessTokenKey + '|shadow';
+    redisUtility.fetchDataFromRedis(shadowKeyName, function (redisDataFetchError, fetchedAccessTokenData) {
+        if (redisDataFetchError) {
+            console.log('--------------ERROR WHILE FETCHING DATA FROM REDIS---------------');
+            console.log(redisDataFetchError);
+            console.log('--------------ERROR WHILE FETCHING DATA FROM REDIS---------------');
+        } else if (!fetchedAccessTokenData) {
+            console.log('--------------NO SHADOW KEY FOUND----------------');
+            console.log(accessTokenKey);
+            console.log('--------------NO SHADOW KEY FOUND----------------');
+        } else {
+            const bucketId = fetchedAccessTokenData;
+            const hostName = accessTokenKey.split('|')[0];
+            decrementBucketStatistics(hostName, bucketId, function(error) {
+            	if (error) {
+            		console.log('-------------ERROR-----------');
+            		console.log(error);
+            		console.log('-------------ERROR-----------');
+            	}
+            });
+        }
+    });
+}
+
+redisUtility.pubsubConnection.psubscribe('*');
+
+redisUtility.pubsubConnection.on('pmessage', function (pattern, channel, message) {
+    if (channel === '__keyevent@0__:expired') {
+        handleAccessTokenExpiry(message);
+    }
+});
+
+redisUtility.pubsubConnection.on('psubscribe', function () {
+    console.log('Redis pubsub has subscribed successfully');
 });
 
 app.listen(CONFIG.SERVICE_PORT, function (error) {
