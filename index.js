@@ -16,14 +16,21 @@ for (const hostName in TRAFFIC_CONFIG) {
     _getBucketStatistics(hostName, function (error, bucketStatistics) {
         if (error) {
 
-        	const hashKeyArray = [hostName + '_bucket'];
+        	const bucketName = hostName + '_bucket';
+        	const bucketObject = {};
         	for (var i = 0; i < 100; i++) {
-        		hashKeyArray.push(i);
-        		hashKeyArray.push(0);
+        		bucketObject[i] = 0;
         	}
 
-            redisUtility.setHashMapAsArrayInRedis(hashKeyArray, function (error) {
+        	console.log(bucketObject);
+
+            redisUtility.setHashMapAsArrayInRedis(bucketName, bucketObject, function (error) {
+            	console.log(error);
                 console.log('Created bucket in redis for hostname: ' + hostName);
+
+                redisUtility.getAllHashMapValues(hostName + '_bucket', function(someError, data) {
+                	console.log(data);
+                });
             });
         }
     });
@@ -131,7 +138,7 @@ function _getBucketStatistics(hostName, callback) {
             return;
         }
 
-        callback(bucketDetails);
+        callback(null, bucketDetails);
     });
 }
 
@@ -252,11 +259,17 @@ app.use(function (req, res, next) {
         function (fetchedBucketDetailsObj, waterfallCallback) {
         	var fetchedBucketDetails = Object.keys( fetchedBucketDetailsObj ).map(function ( key ) { return fetchedBucketDetailsObj[key]; });
             const valueOfBucketWithMinimumUsers = Math.min.apply(null, fetchedBucketDetails);
+            
             console.log('---------VALUE OF BUCKET WITH MINIMUM USERS----------');
             console.log(valueOfBucketWithMinimumUsers);
             console.log('---------VALUE OF BUCKET WITH MINIMUM USERS----------');
-            const updatedValueOfBucket = ++valueOfBucketWithMinimumUsers;
-            const indexOfBucketWithMinimumUsers = fetchedBucketDetails.indexOf(valueOfBucketWithMinimumUsers);
+
+            const updatedValueOfBucket = valueOfBucketWithMinimumUsers + 1;
+            const indexOfBucketWithMinimumUsers = fetchedBucketDetails.indexOf(String(valueOfBucketWithMinimumUsers));
+
+            console.log('---------INDEX OF BUCKET WITH MINIMUM USERS----------');
+            console.log(indexOfBucketWithMinimumUsers);
+            console.log('---------INDEX OF BUCKET WITH MINIMUM USERS----------');
             _incrementBucketStatisticsValue(hostName, indexOfBucketWithMinimumUsers, updatedValueOfBucket, function (bucketStatisticsUpdateError) {
                 if (bucketStatisticsUpdateError) {
                     waterfallCallback(bucketStatisticsUpdateError);
