@@ -50,6 +50,12 @@ for (const hostName in TRAFFIC_CONFIG) {
 
 app.use(morgan("short"));
 
+// Health middleware
+app.get( '/health', (req, res, next) => {
+	console.log( "Healthy!" );
+	res.send( Date.now() + "" );
+});
+
 // Redirection middleware for HTTP -> HTTPS
 app.use(function (req, res, next) {
     next();
