@@ -12,11 +12,23 @@ const
     CONFIG = require('./config/main.js')[process.env.STAGE || 'local'],
     TRAFFIC_CONFIG = require('./config/traffic_config');
 
+function _getBucketCollectionName(hostName) {
+	return hostName + '_bucket';
+};
+
+function _getAccessTokenKeyName(hostName, accessToken) {
+	return hostName + '|' + accessToken;
+};
+
+function _getShadowKeyName(originalKeyName) {
+	return originalKeyName + '|shadow';
+};
+
 for (const hostName in TRAFFIC_CONFIG) {
     _getBucketStatistics(hostName, function (error, bucketStatistics) {
         if (error) {
 
-        	const bucketName = hostName + '_bucket';
+        	const bucketName = _getBucketCollectionName(hostName);
         	const bucketObject = {};
         	for (var i = 0; i < 100; i++) {
         		bucketObject[i] = 0;
@@ -28,7 +40,7 @@ for (const hostName in TRAFFIC_CONFIG) {
             	console.log(error);
                 console.log('Created bucket in redis for hostname: ' + hostName);
 
-                redisUtility.getAllHashMapValues(hostName + '_bucket', function(someError, data) {
+                redisUtility.getAllHashMapValues(_getBucketCollectionName(hostName), function(someError, data) {
                 	console.log(data);
                 });
             });
@@ -109,7 +121,7 @@ app.use(function (req, res, next) {
 });
 
 function _getCurrentUserStatus(accessToken, hostName, callback) {
-    const redisKey = hostName + '|' + accessToken;
+    const redisKey = _getAccessTokenKeyName(hostName, accessToken);
     redisUtility.fetchDataFromRedis(redisKey, function (error, bucketId) {
         if (error) {
             callback(error);
@@ -126,7 +138,7 @@ function _getCurrentUserStatus(accessToken, hostName, callback) {
 }
 
 function _getBucketStatistics(hostName, callback) {
-    const redisKey = hostName + '_bucket';
+    const redisKey = _getBucketCollectionName(hostName);
     redisUtility.getAllHashMapValues(redisKey, function (error, bucketDetails) {
         if (error) {
             callback(error);
@@ -143,19 +155,19 @@ function _getBucketStatistics(hostName, callback) {
 }
 
 function _incrementBucketStatisticsValue(hostName, bucketIndex, updatedBucketValue, callback) {
-    const bucketName = hostName + '_bucket';
+    const bucketName = _getBucketCollectionName(hostName);
     redisUtility.setHashMapInRedis(bucketName, bucketIndex, updatedBucketValue, callback);
 }
 
 function _updateExpiryOfAccessToken(accessToken, hostName, callback) {
-    const userKeyInRedis = hostName + '|' + accessToken;
+    const userKeyInRedis = _getAccessTokenKeyName(hostName, accessToken);
     const ttlInDays = TRAFFIC_CONFIG[hostName].TTL || 1;
-    const ttlInSeconds = ttlInDays * 24 * 60 * 60;
+    const ttlInSeconds = 10;
     redisUtility.updateExpiryOfKey(userKeyInRedis, ttlInSeconds, callback);
 }
 
 function _associateUserWithABucket(accessToken, hostName, bucketId, callback) {
-    const userKeyInRedis = hostName + '|' + accessToken;
+    const userKeyInRedis = _getAccessTokenKeyName(hostName, accessToken);
     async.waterfall([
         function (waterfallCallback) {
             redisUtility.insertDataInRedis(userKeyInRedis, bucketId, function (redisInsertionError) {
@@ -176,7 +188,7 @@ function _associateUserWithABucket(accessToken, hostName, bucketId, callback) {
 }
 
 function _addShadowKeyForUser(originalKeyName, bucketId, callback) {
-    const shadowKeyName = originalKeyName + '|shadow';
+    const shadowKeyName = _getShadowKeyName(originalKeyName);
     redisUtility.insertDataInRedis(shadowKeyName, bucketId, callback);
 }
 
@@ -259,7 +271,7 @@ app.use(function (req, res, next) {
         function (fetchedBucketDetailsObj, waterfallCallback) {
         	var fetchedBucketDetails = Object.keys( fetchedBucketDetailsObj ).map(function ( key ) { return fetchedBucketDetailsObj[key]; });
             const valueOfBucketWithMinimumUsers = Math.min.apply(null, fetchedBucketDetails);
-            
+
             console.log('---------VALUE OF BUCKET WITH MINIMUM USERS----------');
             console.log(valueOfBucketWithMinimumUsers);
             console.log('---------VALUE OF BUCKET WITH MINIMUM USERS----------');
@@ -313,7 +325,7 @@ app.use(function (req, res, next) {
 });
 
 function decrementBucketStatistics(hostName, bucketId, callback) {
-	const bucketName = hostName + '_bucket';
+	const bucketName = _getBucketCollectionName(hostName);
     async.waterfall([
         function (waterfallCallback) {
             redisUtility.getHashMapInRedis(bucketName, bucketId, function (err, currentUserInBucket) {
@@ -322,7 +334,16 @@ function decrementBucketStatistics(hostName, bucketId, callback) {
         },
 
         function(currentUserInBucket, waterfallCallback) {
-        	const finalUsersInBucket = currentUserInBucket++;
+        	const finalUsersInBucket = currentUserInBucket - 1;
+        	console.log('------CURRENT USERS-------');
+        	console.log(currentUserInBucket);
+        	console.log('------CURRENT USERS-------');
+        	console.log('------FINAL USERS-------');
+        	console.log(finalUsersInBucket);
+        	console.log('------FINAL USERS-------');
+        	console.log('------BUCKET ID-------');
+        	console.log(bucketId);
+        	console.log('------BUCKET ID-------');
         	redisUtility.setHashMapInRedis(bucketName, bucketId, finalUsersInBucket, function (err, currentUserInBucket) {
                 waterfallCallback(err, currentUserInBucket);
             });
@@ -331,7 +352,7 @@ function decrementBucketStatistics(hostName, bucketId, callback) {
 }
 
 function handleAccessTokenExpiry(accessTokenKey) {
-    const shadowKeyName = accessTokenKey + '|shadow';
+    const shadowKeyName = _getShadowKeyName(accessTokenKey);
     redisUtility.fetchDataFromRedis(shadowKeyName, function (redisDataFetchError, fetchedAccessTokenData) {
         if (redisDataFetchError) {
             console.log('--------------ERROR WHILE FETCHING DATA FROM REDIS---------------');
@@ -359,6 +380,11 @@ redisUtility.pubsubConnection.psubscribe('*');
 
 redisUtility.pubsubConnection.on('pmessage', function (pattern, channel, message) {
     if (channel === '__keyevent@0__:expired') {
+    	console.log('--------EXPIRY EVENT--------');
+    	console.log(pattern);
+    	console.log(channel);
+    	console.log(message);
+    	console.log('--------EXPIRY EVENT--------');
         handleAccessTokenExpiry(message);
     }
 });
