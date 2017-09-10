@@ -3,72 +3,77 @@ const
     request = require('request'),
     async = require('async'),
     morgan = require('morgan'),
-    cookieParser = require( 'cookie-parser' );
+    cookieParser = require('cookie-parser');
 
 const app = express();
 
 const
-    redisUtility = require('./lib/redisUtility');
+    redisUtility = require('./lib/redisUtility'),
+    redisCleaner = require('./lib/redisCleaner');
+
 const
     CONFIG = require('./config/main.js')[process.env.STAGE || 'local'],
     TRAFFIC_CONFIG = require('./config/traffic_config');
 
 var APPENGINE_ENDPOINT;
-switch( process.env.STAGE ) {
-	case "devo":
-		APPENGINE_ENDPOINT = "https://devo-pratilipi.appspot.com";
-		break;
-	case "gamma":
-		APPENGINE_ENDPOINT = "https://gae-gamma.pratilipi.com";
-		break;
-	case "prod":
-		APPENGINE_ENDPOINT = "https://gae-prod.pratilipi.com";
-		break;
+switch (process.env.STAGE) {
+    case "devo":
+        APPENGINE_ENDPOINT = "https://devo-pratilipi.appspot.com";
+        break;
+    case "gamma":
+        APPENGINE_ENDPOINT = "https://gae-gamma.pratilipi.com";
+        break;
+    case "prod":
+        APPENGINE_ENDPOINT = "https://gae-prod.pratilipi.com";
+        break;
+    default:
+        APPENGINE_ENDPOINT = "https://devo-pratilipi.appspot.com";
+        break;
 }
 
 const UNEXPECTED_SERVER_EXCEPTION = { "message": "Some exception occurred at server. Please try again." };
 
-String.prototype.isStaticFileRequest = function() {
-	var staticFileExts = [ ".html", ".css", ".js", ".ico", ".png", ".svg", ".jpg", ".jpeg" ];
-	for( var i = 0; i < staticFileExts.length; i++ )
-		if( this && this.endsWith( staticFileExts[i] ) ) return true;
-	return false;
+String.prototype.isStaticFileRequest = function () {
+    var staticFileExts = [".html", ".css", ".js", ".ico", ".png", ".svg", ".jpg", ".jpeg"];
+    for (var i = 0; i < staticFileExts.length; i++)
+        if (this && this.endsWith(staticFileExts[i])) return true;
+    return false;
 };
 
-String.prototype.contains = function( str, startIndex ) {
-	return -1 !== String.prototype.indexOf.call( this, str, startIndex );
+String.prototype.contains = function (str, startIndex) {
+    return -1 !== String.prototype.indexOf.call(this, str, startIndex);
 };
 
 function _getBucketCollectionName(hostName) {
-	return hostName + '_bucket';
+    return hostName + '_bucket';
 };
 
 function _getAccessTokenKeyName(hostName, accessToken) {
-	return hostName + '|' + accessToken;
+    return hostName + '|' + accessToken;
 };
 
 function _getShadowKeyName(originalKeyName) {
-	return originalKeyName + '|shadow';
+    return originalKeyName + '|shadow';
 };
 
 for (const hostName in TRAFFIC_CONFIG) {
     _getBucketStatistics(hostName, function (error, bucketStatistics) {
         if (error) {
 
-        	const bucketName = _getBucketCollectionName(hostName);
-        	const bucketObject = {};
-        	for (var i = 0; i < 100; i++) {
-        		bucketObject[i] = 0;
-        	}
+            const bucketName = _getBucketCollectionName(hostName);
+            const bucketObject = {};
+            for (var i = 0; i < 100; i++) {
+                bucketObject[i] = 0;
+            }
 
-        	console.log(bucketObject);
+            console.log(bucketObject);
 
             redisUtility.hmset(bucketName, bucketObject, function (error) {
-            	console.log(error);
+                console.log(error);
                 console.log('Created bucket in redis for hostname: ' + hostName);
 
-                redisUtility.hgetall(_getBucketCollectionName(hostName), function(someError, data) {
-                	console.log(data);
+                redisUtility.hgetall(_getBucketCollectionName(hostName), function (someError, data) {
+                    console.log(data);
                 });
             });
         }
@@ -76,286 +81,289 @@ for (const hostName in TRAFFIC_CONFIG) {
 }
 
 app.use(morgan("short"));
-app.use( cookieParser() );
+app.use(cookieParser());
 
 // Health middleware
-app.get( '/health', (req, res, next) => {
-	console.log( "Healthy!" );
-	res.send( Date.now() + "" );
+app.get('/health', (req, res, next) => {
+    console.log("Healthy!");
+    res.send(Date.now() + "");
 });
 
 /*
-*   http -> https redirection
-*	If your app is behind a trusted proxy (e.g. an AWS ELB or a correctly configured nginx), this code should work.
-*	This assumes that you're hosting your site on 80 and 443, if not, you'll need to change the port when you redirect.
-*	This also assumes that you're terminating the SSL on the proxy. If you're doing SSL end to end use the answer from @basarat above. End to end SSL is the better solution.
-*	app.enable('trust proxy') allows express to check the X-Forwarded-Proto header.
-*/
-app.enable( 'trust proxy' );
-app.use( (req, res, next) => {
-	if( req.secure || TRAFFIC_CONFIG[ req.headers.host ].VERSION === "ALPHA" ) {
-		return next();
-	}
-	res.redirect( "https://" + req.headers.host + req.url );
+ *   http -> https redirection
+ *	If your app is behind a trusted proxy (e.g. an AWS ELB or a correctly configured nginx), this code should work.
+ *	This assumes that you're hosting your site on 80 and 443, if not, you'll need to change the port when you redirect.
+ *	This also assumes that you're terminating the SSL on the proxy. If you're doing SSL end to end use the answer from @basarat above. End to end SSL is the better solution.
+ *	app.enable('trust proxy') allows express to check the X-Forwarded-Proto header.
+ */
+app.enable('trust proxy');
+app.use((req, res, next) => {
+    if (req.secure || TRAFFIC_CONFIG[req.headers.host].VERSION === "ALPHA") {
+        return next();
+    }
+    res.redirect("https://" + req.headers.host + req.url);
 });
 
 // https://www.hindi.pratilipi.com -> https://hindi.pratilipi.com
-app.use( (req, res, next) => {
-	var host = req.get( 'host' );
-	var redirected = false;
+app.use((req, res, next) => {
+    var host = req.get('host');
+    var redirected = false;
 
-	if (TRAFFIC_CONFIG[host.substring("www.".length)]) {
-		return res.redirect( 301, ( req.secure ? 'https://' : 'http://' ) + host.substring("www.".length) + req.originalUrl );
-	} else {
-		next();
-	}
+    if (TRAFFIC_CONFIG[host.substring("www.".length)]) {
+        return res.redirect(301, (req.secure ? 'https://' : 'http://') + host.substring("www.".length) + req.originalUrl);
+    } else {
+        next();
+    }
 });
 
 
 // If nothing matches, redirect to pratilipi.com
-app.use( (req, res, next) => {
-	if( TRAFFIC_CONFIG[ req.headers.host ] == null )
-		return res.redirect( 301, 'https://www.pratilipi.com/?redirect=ecs' );
-	else
-		next();
+app.use((req, res, next) => {
+    if (TRAFFIC_CONFIG[req.headers.host] == null)
+        return res.redirect(301, 'https://www.pratilipi.com/?redirect=ecs');
+    else
+        next();
 });
 
 // Redirection for trailing slash
-app.use( (req, res, next) => {
-	if( req.path !== "/" && req.originalUrl.endsWith( "/" ) )
-		return res.redirect( 301, ( req.secure ? 'https://' : 'http://' ) + req.get('host') + req.originalUrl.slice(0, -1) );
-	else
-		return next();
+app.use((req, res, next) => {
+    if (req.path !== "/" && req.originalUrl.endsWith("/"))
+        return res.redirect(301, (req.secure ? 'https://' : 'http://') + req.get('host') + req.originalUrl.slice(0, -1));
+    else
+        return next();
 });
 
 // Redirections
-app.use( (req, res, next) => {
-	var redirections = {};
-	redirections[ "/theme.pratilipi/logo.png" ] =  "/logo.png" ;
-	redirections[ "/apple-touch-icon.png" ] =  "/favicon.ico" ;
-	redirections[ "/apple-touch-icon-120x120.png" ] =  "/favicon.ico" ;
-	redirections[ "/apple-touch-icon-precomposed.png" ] =  "/favicon.ico" ;
-	redirections[ "/apple-touch-icon-120x120-precomposed.png" ] =  "/favicon.ico" ;
-	redirections[ "/about" ] =  "/about/pratilipi" ;
-	redirections[ "/career" ] =  "/work-with-us" ;
-	redirections[ "/authors" ] =  "/admin/authors" ;
-	redirections[ "/email-templates" ] =  "/admin/email-templates" ;
-	redirections[ "/batch-process" ] =  "/admin/batch-process" ;
-	redirections[ "/resetpassword" ] =  "/forgot-password" ;
+app.use((req, res, next) => {
+    var redirections = {};
+    redirections["/theme.pratilipi/logo.png"] = "/logo.png";
+    redirections["/apple-touch-icon.png"] = "/favicon.ico";
+    redirections["/apple-touch-icon-120x120.png"] = "/favicon.ico";
+    redirections["/apple-touch-icon-precomposed.png"] = "/favicon.ico";
+    redirections["/apple-touch-icon-120x120-precomposed.png"] = "/favicon.ico";
+    redirections["/about"] = "/about/pratilipi";
+    redirections["/career"] = "/work-with-us";
+    redirections["/authors"] = "/admin/authors";
+    redirections["/email-templates"] = "/admin/email-templates";
+    redirections["/batch-process"] = "/admin/batch-process";
+    redirections["/resetpassword"] = "/forgot-password";
 
-	if( redirections[ req.path ] )
-		return res.redirect( 301, ( req.secure ? 'https://' : 'http://' ) + req.get('host') + redirections[ req.path ] );
-	else
-		next();
+    if (redirections[req.path])
+        return res.redirect(301, (req.secure ? 'https://' : 'http://') + req.get('host') + redirections[req.path]);
+    else
+        next();
 });
 
 // Redirecting to new Pratilipi content image url
-app.use( (req, res, next) => {
-	if( req.path === "/api.pratilipi/pratilipi/resource" )
-		return res.redirect( 301, ( req.secure ? 'https://' : 'http://' ) + req.get('host') + "/api/pratilipi/content/image" + "?" + req.url.split( '?' )[1] );
-	else
-		next();
+app.use((req, res, next) => {
+    if (req.path === "/api.pratilipi/pratilipi/resource")
+        return res.redirect(301, (req.secure ? 'https://' : 'http://') + req.get('host') + "/api/pratilipi/content/image" + "?" + req.url.split('?')[1]);
+    else
+        next();
 });
 
 // Redirection for mini domains based on User-Agent headers
 app.use(function (req, res, next) {
-    var web = TRAFFIC_CONFIG[ req.headers.host ]
-	if( req.headers.host !== web.BASIC_DOMAIN && process.env.STAGE === "prod" ) {
+    var web = TRAFFIC_CONFIG[req.headers.host]
+    if (req.headers.host !== web.BASIC_DOMAIN && process.env.STAGE === "prod") {
 
-		var userAgent = req.get( 'User-Agent' );
-		var basicBrowser = false;
+        var userAgent = req.get('User-Agent');
+        var basicBrowser = false;
 
-		if( userAgent == null || userAgent.trim() === "" ) {
-			basicBrowser = true;
+        if (userAgent == null || userAgent.trim() === "") {
+            basicBrowser = true;
 
-		} else if( userAgent.contains( "UCBrowser" ) || userAgent.contains( "UCWEB" ) ) { // UCBrowser
+        } else if (userAgent.contains("UCBrowser") || userAgent.contains("UCWEB")) { // UCBrowser
 
-			 // UCBrowser on Android 4.3
-			 // "Mozilla/5.0 (Linux; U; Android 4.3; en-US; GT-I9300 Build/JSS15J) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 UCBrowser/10.0.1.512 U3/0.8.0 Mobile Safari/533.1"
+            // UCBrowser on Android 4.3
+            // "Mozilla/5.0 (Linux; U; Android 4.3; en-US; GT-I9300 Build/JSS15J) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 UCBrowser/10.0.1.512 U3/0.8.0 Mobile Safari/533.1"
 
-			basicBrowser = true; // Extreme mode
+            basicBrowser = true; // Extreme mode
 
-		} else if( userAgent.contains( "Opera Mobi" ) ) { // Opera Classic
+        } else if (userAgent.contains("Opera Mobi")) { // Opera Classic
 
-			 // Opera Classic on Android 4.3
-			 //  "Opera/9.80 (Android 4.3; Linux; Opera Mobi/ADR-1411061201) Presto/2.11.355 Version/12.10"
+            // Opera Classic on Android 4.3
+            //  "Opera/9.80 (Android 4.3; Linux; Opera Mobi/ADR-1411061201) Presto/2.11.355 Version/12.10"
 
-			basicBrowser = true; // Not sure whether Polymer 1.0 is supported or not
+            basicBrowser = true; // Not sure whether Polymer 1.0 is supported or not
 
-		} else if( userAgent.contains( "Opera Mini" ) ) { // Opera Mini
+        } else if (userAgent.contains("Opera Mini")) { // Opera Mini
 
-			 // Opera Mini on Android 4.3
-			 //  "Opera/9.80 (Android; Opera Mini/7.6.40077/35.5706; U; en) Presto/2.8.119 Version/11.10"
+            // Opera Mini on Android 4.3
+            //  "Opera/9.80 (Android; Opera Mini/7.6.40077/35.5706; U; en) Presto/2.8.119 Version/11.10"
 
-			basicBrowser = true; // Extreme mode
+            basicBrowser = true; // Extreme mode
 
-		} else if( userAgent.contains( "Trident/7" ) && userAgent.contains( "rv:11" ) ) { // Microsoft Internet Explorer 11
+        } else if (userAgent.contains("Trident/7") && userAgent.contains("rv:11")) { // Microsoft Internet Explorer 11
 
-			 // Microsoft Internet Explorer 11 on Microsoft Windows 8.1
-			 //  "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; Touch; LCJB; rv:11.0) like Gecko"
+            // Microsoft Internet Explorer 11 on Microsoft Windows 8.1
+            //  "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; Touch; LCJB; rv:11.0) like Gecko"
 
-			basicBrowser = true;
+            basicBrowser = true;
 
-		} else if( userAgent.contains( "OPR" ) ) { // Opera
+        } else if (userAgent.contains("OPR")) { // Opera
 
-			// Opera on Microsoft Windows 8.1
-			//   "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.65 Safari/537.36 OPR/26.0.1656.24"
-			// Opera on Android 4.3
-			//   "Mozilla/5.0 (Linux; Android 4.3; GT-I9300 Build/JSS15J) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.102 Mobile Safari/537.36 OPR/25.0.1619.84037"
+            // Opera on Microsoft Windows 8.1
+            //   "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.65 Safari/537.36 OPR/26.0.1656.24"
+            // Opera on Android 4.3
+            //   "Mozilla/5.0 (Linux; Android 4.3; GT-I9300 Build/JSS15J) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.102 Mobile Safari/537.36 OPR/25.0.1619.84037"
 
-			var userAgentSubStr = userAgent.substring( userAgent.indexOf( "OPR" ) + 4 );
-			var version = parseInt( userAgentSubStr.substring( 0, userAgentSubStr.indexOf( "." ) ) );
-			// basicBrowser = version < 20;
-			basicBrowser = false;
+            var userAgentSubStr = userAgent.substring(userAgent.indexOf("OPR") + 4);
+            var version = parseInt(userAgentSubStr.substring(0, userAgentSubStr.indexOf(".")));
+            // basicBrowser = version < 20;
+            basicBrowser = false;
 
-		} else if( userAgent.contains( "Edge" ) ) {
+        } else if (userAgent.contains("Edge")) {
 
-			// Microsoft Edge browser on Windows 10
-			// Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14393
+            // Microsoft Edge browser on Windows 10
+            // Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14393
 
-			basicBrowser = false;
+            basicBrowser = false;
 
-		} else if( userAgent.contains( "Chrome" ) && ! userAgent.contains( "(Chrome)" ) ) { // Google Chrome
+        } else if (userAgent.contains("Chrome") && !userAgent.contains("(Chrome)")) { // Google Chrome
 
-			 // Google Chrome on Microsoft Windows 8.1
-			 //   "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.65 Safari/537.36"
-			 // Google Chrome on Android 4.3
-			 //   "Mozilla/5.0 (Linux; Android 4.3; GT-I9300 Build/JSS15J) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.59 Mobile Safari/537.36"
+            // Google Chrome on Microsoft Windows 8.1
+            //   "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.65 Safari/537.36"
+            // Google Chrome on Android 4.3
+            //   "Mozilla/5.0 (Linux; Android 4.3; GT-I9300 Build/JSS15J) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.59 Mobile Safari/537.36"
 
-			var userAgentSubStr = userAgent.substring( userAgent.indexOf( "Chrome" ) + 7 );
-			var version = parseInt( userAgentSubStr.substring( 0, userAgentSubStr.indexOf( "." ) ) );
-			basicBrowser = version < 35;
+            var userAgentSubStr = userAgent.substring(userAgent.indexOf("Chrome") + 7);
+            var version = parseInt(userAgentSubStr.substring(0, userAgentSubStr.indexOf(".")));
+            basicBrowser = version < 35;
 
-		} else if( userAgent.contains( "Safari" ) ) { // Apple Safari
+        } else if (userAgent.contains("Safari")) { // Apple Safari
 
-			// Apple Safari on Microsoft Windows 8.1
-			//   Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/534.57.2 (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2
+            // Apple Safari on Microsoft Windows 8.1
+            //   Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/534.57.2 (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2
 
-			// if( userAgent.contains( "Version" ) ) {
-			// 		var userAgentSubStr = userAgent.substring( userAgent.indexOf( "Version" ) + 8 );
-			// 		var version = parseInt( userAgentSubStr.substring( 0, userAgentSubStr.indexOf( "." ) ) );
-			// 		basicBrowser = version < 8;
-			// } else {
-			// 		var userAgentSubStr = userAgent.substring( userAgent.indexOf( "Safari" ) + 7 );
-			// 		var version = parseInt( userAgentSubStr.substring( 0, userAgentSubStr.indexOf( "." ) ) );
-			// 		basicBrowser = version < 538 || version > 620;
-			// }
-			
-			basicBrowser = false;
+            // if( userAgent.contains( "Version" ) ) {
+            // 		var userAgentSubStr = userAgent.substring( userAgent.indexOf( "Version" ) + 8 );
+            // 		var version = parseInt( userAgentSubStr.substring( 0, userAgentSubStr.indexOf( "." ) ) );
+            // 		basicBrowser = version < 8;
+            // } else {
+            // 		var userAgentSubStr = userAgent.substring( userAgent.indexOf( "Safari" ) + 7 );
+            // 		var version = parseInt( userAgentSubStr.substring( 0, userAgentSubStr.indexOf( "." ) ) );
+            // 		basicBrowser = version < 538 || version > 620;
+            // }
 
-		} else if( userAgent.contains( "Firefox" ) ) { // Mozilla Firefox
+            basicBrowser = false;
 
-			 // Mozilla Firefox on Microsoft 8.1
-			 //   "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:33.0) Gecko/20100101 Firefox/33.0 AlexaToolbar/alxf-2.21"
-			 // Mozilla Firefox on Android 4.3
-			 //   "Mozilla/5.0 (Android; Mobile; rv:33.0) Gecko/33.0 Firefox/33.0"
-			 // Mozilla Firefox on Linux
-			 //   "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0 (Chrome)"
+        } else if (userAgent.contains("Firefox")) { // Mozilla Firefox
 
-			var userAgentSubStr = userAgent.substring( userAgent.indexOf( "Firefox" ) + 8 );
-			var version = parseInt( userAgentSubStr.substring( 0, userAgentSubStr.indexOf( "." ) ) );
-			// basicBrowser = version < 28;
-			basicBrowser = false;
+            // Mozilla Firefox on Microsoft 8.1
+            //   "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:33.0) Gecko/20100101 Firefox/33.0 AlexaToolbar/alxf-2.21"
+            // Mozilla Firefox on Android 4.3
+            //   "Mozilla/5.0 (Android; Mobile; rv:33.0) Gecko/33.0 Firefox/33.0"
+            // Mozilla Firefox on Linux
+            //   "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20100101 Firefox/10.0 (Chrome)"
 
-		} else {
-			basicBrowser = true;
-			console.log( "UNKNOWN_USER_AGENT :: " + userAgent );
-		}
+            var userAgentSubStr = userAgent.substring(userAgent.indexOf("Firefox") + 8);
+            var version = parseInt(userAgentSubStr.substring(0, userAgentSubStr.indexOf(".")));
+            // basicBrowser = version < 28;
+            basicBrowser = false;
 
-		if( basicBrowser ) {
-			return res.redirect( 307, ( req.secure ? 'https://' : 'http://' ) + web.BASIC_DOMAIN + req.url );
-		} else {
-			next();
-		}
-	} else {
-		next();
-	}
+        } else {
+            basicBrowser = true;
+            console.log("UNKNOWN_USER_AGENT :: " + userAgent);
+        }
+
+        if (basicBrowser) {
+            return res.redirect(307, (req.secure ? 'https://' : 'http://') + web.BASIC_DOMAIN + req.url);
+        } else {
+            next();
+        }
+    } else {
+        next();
+    }
 });
 
 // Getting the access token for the current user
-app.use( (req, res, next) => {
-	if( req.path.isStaticFileRequest() ) {
-		next();
-	} else {
-		var accessToken = req.cookies[ "access_token" ];
-		var url = APPENGINE_ENDPOINT + "/ecs/accesstoken";
-		if( accessToken ) url += "?accessToken=" + accessToken;
-		request( url, (error, response, body) => {
-			if( error ) {
-				console.log( 'ACCESS_TOKEN_ERROR :: ', error );
-				res.status(500).send( UNEXPECTED_SERVER_EXCEPTION );
-			} else {
-				try { accessToken = JSON.parse( body )[ "accessToken" ]; } catch(e) {}
-				if( ! accessToken ) {
-					console.log( 'ACCESS_TOKEN_CALL_ERROR' );
-					res.status(500).send( UNEXPECTED_SERVER_EXCEPTION );
-				} else {
-					var domain = process.env.STAGE === 'devo' ? '.ptlp.co' : '.pratilipi.com';
-					if( TRAFFIC_CONFIG[ req.headers.host ][ "VERSION" ] === "ALPHA" )
-						domain = "localhost";
-					res.locals[ "access-token" ] = accessToken;
-					res.cookie( 'access_token', accessToken,
-						{ domain: domain,
-							path: '/',
-							maxAge: 30 * 24 * 3600000, // 30 days
-							httpOnly: false } );
-					next();
-				}
-			}
-		});
+app.use((req, res, next) => {
+    if (req.path.isStaticFileRequest()) {
+        next();
+    } else {
+        var accessToken = req.cookies["access_token"];
+        var url = APPENGINE_ENDPOINT + "/ecs/accesstoken";
+        if (accessToken) url += "?accessToken=" + accessToken;
+        request(url, (error, response, body) => {
+            if (error) {
+                console.log('ACCESS_TOKEN_ERROR :: ', error);
+                res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
+            } else {
+                try { accessToken = JSON.parse(body)["accessToken"]; } catch (e) {}
+                if (!accessToken) {
+                    console.log('ACCESS_TOKEN_CALL_ERROR');
+                    res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
+                } else {
+                    var domain = process.env.STAGE === 'devo' ? '.ptlp.co' : '.pratilipi.com';
+                    if (TRAFFIC_CONFIG[req.headers.host]["VERSION"] === "ALPHA")
+                        domain = "localhost";
+                    res.locals["access-token"] = accessToken;
+                    res.cookie('access_token', accessToken, {
+                        domain: domain,
+                        path: '/',
+                        maxAge: 30 * 24 * 3600000, // 30 days
+                        httpOnly: false
+                    });
+                    next();
+                }
+            }
+        });
 
-	}
+    }
 });
 
 // Serving mini website
-app.get( '/*', (req, res, next) => {
-	var web = TRAFFIC_CONFIG[ req.headers.host ];
-	if( req.headers.host === web.BASIC_DOMAIN ) {
-		_forwardToMini( req, res );
-	} else {
-		next();
-	}
+app.get('/*', (req, res, next) => {
+    var web = TRAFFIC_CONFIG[req.headers.host];
+    if (req.headers.host === web.BASIC_DOMAIN) {
+        res.locals["redirection"] = 'MINI';
+        next();
+    } else {
+        next();
+    }
 });
 
 // Master website: www.pratilipi.com
-app.get( '/*', (req, res, next) => {
-	var web = TRAFFIC_CONFIG[ req.headers.host ];
-	if( web.VERSION === "ALL_LANGUAGE" || web.VERSION === "GAMMA_ALL_LANGUAGE" )
-		_forwardToMini( req, res );
-	else
-		next();
+app.get('/*', (req, res, next) => {
+    var web = TRAFFIC_CONFIG[req.headers.host];
+    if (web.VERSION === "ALL_LANGUAGE" || web.VERSION === "GAMMA_ALL_LANGUAGE") {
+        res.locals["redirection"] = 'MINI';
+    	next();
+    } else {
+        next();
+    }
 });
 
 // Other urls where PWA is not supported
-app.get( '/*', (req, res, next) => {
+app.get('/*', (req, res, next) => {
 
-	var forwardToMini = false;
-	if( req.path === '/pratilipi-write'
-		|| req.path === '/write'
-		|| req.path.startsWith( '/admin/' )
-		|| req.path === '/edit-event'
-		|| req.path === '/edit-blog'
-		|| req.url.contains( 'loadPWA=false' ) ) {
-		forwardToMini = true;
-	}
+    var forwardToMini = false;
+    if (req.path === '/pratilipi-write' ||
+        req.path === '/write' ||
+        req.path.startsWith('/admin/') ||
+        req.path === '/edit-event' ||
+        req.path === '/edit-blog' ||
+        req.url.contains('loadPWA=false')) {
+        forwardToMini = true;
+    }
 
-	// static files
-	var referer = req.header( 'Referer' ) != null ? req.header( 'Referer' ) : "";
-	if( req.path.isStaticFileRequest() &&
-		( referer.contains( '/pratilipi-write' )
-			|| referer.contains( '/write' )
-			|| referer.contains( '/admin' )
-			|| referer.contains( '/edit-event' )
-			|| referer.contains( '/edit-blog' )
-			|| referer.contains( 'loadPWA=false' ) ) ) {
-		forwardToMini = true;
-	}
+    // static files
+    var referer = req.header('Referer') != null ? req.header('Referer') : "";
+    if (req.path.isStaticFileRequest() &&
+        (referer.contains('/pratilipi-write') ||
+            referer.contains('/write') ||
+            referer.contains('/admin') ||
+            referer.contains('/edit-event') ||
+            referer.contains('/edit-blog') ||
+            referer.contains('loadPWA=false'))) {
+        forwardToMini = true;
+    }
 
-	if( forwardToMini ) {
-		_forwardToMini( req, res );
-	} else {
-		next();
-	}
+    if (forwardToMini) {
+        res.locals["redirection"] = 'MINI';
+    }
+    next();
 });
 
 
@@ -473,10 +481,16 @@ function _redirectToProduct(req, res) {
 // Redirection of users who has been previously served a version
 app.use(function (req, res, next) {
 
-	if (res.locals["redirection"] && (res.locals["redirection"] === "GROWTH" || res.locals["redirection"] === "PRODUCT")) {
-		next();
-		return;
-	}
+    if (
+        res.locals["redirection"] &&
+        (
+            res.locals["redirection"] === "GROWTH" ||
+            res.locals["redirection"] === "PRODUCT" ||
+            res.locals["redirection"] === "MINI")
+    ) {
+        next();
+        return;
+    }
 
 
     const currentAccessToken = res.locals["access-token"];
@@ -524,10 +538,15 @@ app.use(function (req, res, next) {
 // Middleware to handle new users whose access token has not been saved in redis
 app.use(function (req, res, next) {
 
-	if (res.locals["redirection"] && (res.locals["redirection"] === "GROWTH" || res.locals["redirection"] === "PRODUCT")) {
-		next();
-		return;
-	}
+    if (
+        res.locals["redirection"] &&
+        (res.locals["redirection"] === "GROWTH" ||
+            res.locals["redirection"] === "PRODUCT" ||
+            res.locals["redirection"] === "MINI"
+        )
+    ) {
+        return;
+    }
 
     const currentAccessToken = res.locals["access-token"];
     const hostName = req.headers.host;
@@ -540,7 +559,7 @@ app.use(function (req, res, next) {
 
         function (waterfallCallback) {
             _getBucketStatistics(hostName, function (bucketDetailsFetchError, fetchedBucketDetails) {
-                if ( bucketDetailsFetchError || !fetchedBucketDetails ) {
+                if (bucketDetailsFetchError || !fetchedBucketDetails) {
                     waterfallCallback(bucketDetailsFetchError || 'No bucket has been setup for this domain');
                 } else {
                     console.log(fetchedBucketDetails);
@@ -550,7 +569,7 @@ app.use(function (req, res, next) {
         },
 
         function (fetchedBucketDetailsObj, waterfallCallback) {
-        	var fetchedBucketDetails = Object.keys( fetchedBucketDetailsObj ).map(function ( key ) { return fetchedBucketDetailsObj[key]; });
+            var fetchedBucketDetails = Object.keys(fetchedBucketDetailsObj).map(function (key) { return fetchedBucketDetailsObj[key]; });
             const valueOfBucketWithMinimumUsers = Math.min.apply(null, fetchedBucketDetails);
 
             console.log('---------VALUE OF BUCKET WITH MINIMUM USERS----------');
@@ -608,92 +627,12 @@ app.use(function (req, res, next) {
     });
 });
 
-app.use(function(req, res, next) {
-	if (res.locals["redirection"] === "GROWTH") {
-		_redirectToGrowth(req, res);
-	} else {
-		_redirectToProduct(req, res);
-	}
-});
-
-function decrementBucketStatistics(hostName, bucketId, callback) {
-	const bucketName = _getBucketCollectionName(hostName);
-    async.waterfall([
-        function (waterfallCallback) {
-            redisUtility.hget(bucketName, bucketId, function (err, currentUserInBucket) {
-                waterfallCallback(err, currentUserInBucket);
-            });
-        },
-
-        function(currentUserInBucket, waterfallCallback) {
-        	const finalUsersInBucket = currentUserInBucket - 1;
-        	console.log('------CURRENT USERS-------');
-        	console.log(currentUserInBucket);
-        	console.log('------CURRENT USERS-------');
-        	console.log('------FINAL USERS-------');
-        	console.log(finalUsersInBucket);
-        	console.log('------FINAL USERS-------');
-        	console.log('------BUCKET ID-------');
-        	console.log(bucketId);
-        	console.log('------BUCKET ID-------');
-        	redisUtility.hset(bucketName, bucketId, finalUsersInBucket, waterfallCallback);
-        }
-    ], callback);
-}
-
-function _deleteShadowKey(keyName, callback) {
-	redisUtility.del(keyName, callback);
-}
-
-function handleAccessTokenExpiry(accessTokenKey) {
-    const shadowKeyName = _getShadowKeyName(accessTokenKey);
-    redisUtility.get(shadowKeyName, function (redisDataFetchError, fetchedAccessTokenData) {
-        if (redisDataFetchError) {
-            console.log('--------------ERROR WHILE FETCHING DATA FROM REDIS---------------');
-            console.log(redisDataFetchError);
-            console.log('--------------ERROR WHILE FETCHING DATA FROM REDIS---------------');
-        } else if (!fetchedAccessTokenData) {
-            console.log('--------------NO SHADOW KEY FOUND----------------');
-            console.log(accessTokenKey);
-            console.log('--------------NO SHADOW KEY FOUND----------------');
-        } else {
-            const bucketId = fetchedAccessTokenData;
-            const hostName = accessTokenKey.split('|')[0];
-            decrementBucketStatistics(hostName, bucketId, function(error) {
-            	if (error) {
-            		console.log('-------------ERROR-----------');
-            		console.log(error);
-            		console.log('-------------ERROR-----------');
-            		return;
-            	}
-
-            	_deleteShadowKey(shadowKeyName, function(shadowKeyDeleteError) {
-            		if (shadowKeyDeleteError) {
-            			console.log('-------------SHADOW KEY DELETION ERROR-----------');
-	            		console.log(shadowKeyDeleteError);
-	            		console.log('-------------SHADOW KEY DELETION ERROR-----------');
-            		}
-            	});
-            });
-        }
-    });
-}
-
-redisUtility.pubsubConnection.psubscribe('*');
-
-redisUtility.pubsubConnection.on('pmessage', function (pattern, channel, message) {
-    if (channel === '__keyevent@0__:expired') {
-    	console.log('--------EXPIRY EVENT--------');
-    	console.log(pattern);
-    	console.log(channel);
-    	console.log(message);
-    	console.log('--------EXPIRY EVENT--------');
-        handleAccessTokenExpiry(message);
+app.use(function (req, res, next) {
+    if (res.locals["redirection"] === "GROWTH") {
+        _redirectToGrowth(req, res);
+    } else {
+        _redirectToProduct(req, res);
     }
-});
-
-redisUtility.pubsubConnection.on('psubscribe', function () {
-    console.log('Redis pubsub has subscribed successfully');
 });
 
 app.listen(CONFIG.SERVICE_PORT, function (error) {
