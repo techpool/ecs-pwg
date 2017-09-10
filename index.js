@@ -162,7 +162,7 @@ function _incrementBucketStatisticsValue(hostName, bucketIndex, updatedBucketVal
 function _updateExpiryOfAccessToken(accessToken, hostName, callback) {
     const userKeyInRedis = _getAccessTokenKeyName(hostName, accessToken);
     const ttlInDays = TRAFFIC_CONFIG[hostName].TTL || 1;
-    const ttlInSeconds = 10;
+    const ttlInSeconds = ttlInDays * 24 * 60 * 60;
     redisUtility.updateExpiryOfKey(userKeyInRedis, ttlInSeconds, callback);
 }
 
@@ -344,11 +344,13 @@ function decrementBucketStatistics(hostName, bucketId, callback) {
         	console.log('------BUCKET ID-------');
         	console.log(bucketId);
         	console.log('------BUCKET ID-------');
-        	redisUtility.setHashMapInRedis(bucketName, bucketId, finalUsersInBucket, function (err, currentUserInBucket) {
-                waterfallCallback(err, currentUserInBucket);
-            });
+        	redisUtility.setHashMapInRedis(bucketName, bucketId, finalUsersInBucket, waterfallCallback);
         }
     ], callback);
+}
+
+function _deleteShadowKey(keyName, callback) {
+	redisUtility.deleteDataInRedis(keyName, callback);
 }
 
 function handleAccessTokenExpiry(accessTokenKey) {
@@ -370,7 +372,16 @@ function handleAccessTokenExpiry(accessTokenKey) {
             		console.log('-------------ERROR-----------');
             		console.log(error);
             		console.log('-------------ERROR-----------');
+            		return;
             	}
+
+            	_deleteShadowKey(shadowKeyName, function(shadowKeyDeleteError) {
+            		if (shadowKeyDeleteError) {
+            			console.log('-------------SHADOW KEY DELETION ERROR-----------');
+	            		console.log(shadowKeyDeleteError);
+	            		console.log('-------------SHADOW KEY DELETION ERROR-----------');
+            		}
+            	});
             });
         }
     });
