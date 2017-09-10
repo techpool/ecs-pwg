@@ -478,6 +478,12 @@ function _redirectToProduct(req, res) {
     });
 }
 
+function _redirectToMini(req, res) {
+    res.status(200).json({
+        'info': 'Mini version is to be served here'
+    });
+}
+
 // Redirection of users who has been previously served a version
 app.use(function (req, res, next) {
 
@@ -630,8 +636,10 @@ app.use(function (req, res, next) {
 app.use(function (req, res, next) {
     if (res.locals["redirection"] === "GROWTH") {
         _redirectToGrowth(req, res);
+    } else if (res.locals["redirection"] === "MINI") {
+        _redirectToMini(req, res);
     } else {
-        _redirectToProduct(req, res);
+    	_redirectToProduct(req, res);
     }
 });
 
