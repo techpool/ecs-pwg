@@ -3,9 +3,12 @@ const
     request = require('request'),
     async = require('async'),
     morgan = require('morgan'),
-    cookieParser = require('cookie-parser');
+    cookieParser = require('cookie-parser'),
+    AsyncLock = require('async-lock');
 
-const app = express();
+const
+    app = express(),
+    lock = new AsyncLock();
 
 const
     redisUtility = require('./lib/redisUtility'),
@@ -94,7 +97,7 @@ app.get('/delete', function (req, res, next) {
     redisUtility.flushdb(function (errorInFlushing) {
         if (errorInFlushing) {
             res.status(500).json({
-                    error: error
+                error: error
             });
             return;
         }
@@ -618,64 +621,67 @@ app.use(function (req, res, next) {
 
 
 
+    lock.acquire(_getBucketCollectionName(hostName), function (done) {
+        async.waterfall([
+
+            function (waterfallCallback) {
+                _getBucketStatistics(hostName, function (bucketDetailsFetchError, fetchedBucketDetails) {
+                    if (bucketDetailsFetchError || !fetchedBucketDetails) {
+                        waterfallCallback(bucketDetailsFetchError || 'No bucket has been setup for this domain');
+                    } else {
+
+                        waterfallCallback(null, fetchedBucketDetails);
+                    }
+                });
+            },
+
+            function (fetchedBucketDetailsObj, waterfallCallback) {
+                var fetchedBucketDetails = Object.keys(fetchedBucketDetailsObj).map(function (key) { return fetchedBucketDetailsObj[key]; });
+                const valueOfBucketWithMinimumUsers = Math.min.apply(null, fetchedBucketDetails);
 
 
-    async.waterfall([
 
-        function (waterfallCallback) {
-            _getBucketStatistics(hostName, function (bucketDetailsFetchError, fetchedBucketDetails) {
-                if (bucketDetailsFetchError || !fetchedBucketDetails) {
-                    waterfallCallback(bucketDetailsFetchError || 'No bucket has been setup for this domain');
+
+
+                const updatedValueOfBucket = valueOfBucketWithMinimumUsers + 1;
+                const indexOfBucketWithMinimumUsers = fetchedBucketDetails.indexOf(String(valueOfBucketWithMinimumUsers));
+
+
+
+
+                _incrementBucketStatisticsValue(hostName, indexOfBucketWithMinimumUsers, updatedValueOfBucket, function (bucketStatisticsUpdateError) {
+                    if (bucketStatisticsUpdateError) {
+                        waterfallCallback(bucketStatisticsUpdateError);
+                    } else {
+                        waterfallCallback(null, indexOfBucketWithMinimumUsers);
+                    }
+                });
+            },
+
+            function (indexOfBucketWithMinimumUsers, waterfallCallback) {
+                _associateUserWithABucket(currentAccessToken, hostName, indexOfBucketWithMinimumUsers, function (userAssociationError) {
+                    if (userAssociationError) {
+                        waterfallCallback(userAssociationError);
+                    } else {
+                        waterfallCallback(null, indexOfBucketWithMinimumUsers);
+                    }
+                });
+            },
+
+            function (indexOfBucketWithMinimumUsers, waterfallCallback) {
+                const bucketId = indexOfBucketWithMinimumUsers + 1;
+                const trafficDetails = TRAFFIC_CONFIG[hostName];
+                if (trafficDetails.GROWTH_PERCENTAGE && trafficDetails.GROWTH_PERCENTAGE >= bucketId) {
+                    waterfallCallback(null, 'REDIRECT_TO_GROWTH');
                 } else {
-
-                    waterfallCallback(null, fetchedBucketDetails);
+                    waterfallCallback(null, 'REDIRECT_TO_PRODUCT');
                 }
-            });
-        },
-
-        function (fetchedBucketDetailsObj, waterfallCallback) {
-            var fetchedBucketDetails = Object.keys(fetchedBucketDetailsObj).map(function (key) { return fetchedBucketDetailsObj[key]; });
-            const valueOfBucketWithMinimumUsers = Math.min.apply(null, fetchedBucketDetails);
-
-
-
-
-
-            const updatedValueOfBucket = valueOfBucketWithMinimumUsers + 1;
-            const indexOfBucketWithMinimumUsers = fetchedBucketDetails.indexOf(String(valueOfBucketWithMinimumUsers));
-
-
-
-
-            _incrementBucketStatisticsValue(hostName, indexOfBucketWithMinimumUsers, updatedValueOfBucket, function (bucketStatisticsUpdateError) {
-                if (bucketStatisticsUpdateError) {
-                    waterfallCallback(bucketStatisticsUpdateError);
-                } else {
-                    waterfallCallback(null, indexOfBucketWithMinimumUsers);
-                }
-            });
-        },
-
-        function (indexOfBucketWithMinimumUsers, waterfallCallback) {
-            _associateUserWithABucket(currentAccessToken, hostName, indexOfBucketWithMinimumUsers, function (userAssociationError) {
-                if (userAssociationError) {
-                    waterfallCallback(userAssociationError);
-                } else {
-                    waterfallCallback(null, indexOfBucketWithMinimumUsers);
-                }
-            });
-        },
-
-        function (indexOfBucketWithMinimumUsers, waterfallCallback) {
-            const bucketId = indexOfBucketWithMinimumUsers + 1;
-            const trafficDetails = TRAFFIC_CONFIG[hostName];
-            if (trafficDetails.GROWTH_PERCENTAGE && trafficDetails.GROWTH_PERCENTAGE >= bucketId) {
-                waterfallCallback(null, 'REDIRECT_TO_GROWTH');
-            } else {
-                waterfallCallback(null, 'REDIRECT_TO_PRODUCT');
             }
-        }
-    ], function (error, redirectLocation) {
+        ], function (error, redirectLocation) {
+            done(error, redirectLocation);
+        });
+
+    }, function (err, ret) {
         if (error) {
             res.locals["redirection"] = "PRODUCT";
             next();
