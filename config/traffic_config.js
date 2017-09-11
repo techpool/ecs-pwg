@@ -593,10 +593,10 @@ module.exports = {
     },
     "hindi-devo-gr.ptlp.co:84":
     {
-        "STACK": "GROWTH",
         "BASIC_DOMAIN": "hi-devo-gr.ptlp.co:84",
         "BASIC_VERSION": false,
         "TTL": 14,
+        "GROWTH_PERCENTAGE": 10,
         "VERSION": "DEVO_HINDI_GR"
     },
     "hi-devo-gr.ptlp.co:84":
