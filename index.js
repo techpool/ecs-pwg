@@ -56,29 +56,30 @@ function _getShadowKeyName(originalKeyName) {
     return originalKeyName + '|shadow';
 };
 
-for (const hostName in TRAFFIC_CONFIG) {
-    _getBucketStatistics(hostName, function (error, bucketStatistics) {
-        if (error) {
+function _initializeBuckets() {
+    for (const hostName in TRAFFIC_CONFIG) {
+        _getBucketStatistics(hostName, function (error, bucketStatistics) {
+            if (error) {
 
-            const bucketName = _getBucketCollectionName(hostName);
-            const bucketObject = {};
-            for (var i = 0; i < 100; i++) {
-                bucketObject[i] = 0;
-            }
+                const bucketName = _getBucketCollectionName(hostName);
+                const bucketObject = {};
+                for (var i = 0; i < 100; i++) {
+                    bucketObject[i] = 0;
+                }
 
-            
 
-            redisUtility.hmset(bucketName, bucketObject, function (error) {
-                
-                
 
-                redisUtility.hgetall(_getBucketCollectionName(hostName), function (someError, data) {
-                    
+                redisUtility.hmset(bucketName, bucketObject, function (error) {
+                    if (error) {
+                        console.log(error);
+                    }
                 });
-            });
-        }
-    });
+            }
+        });
+    }
 }
+
+_initializeBuckets();
 
 app.use(morgan("short"));
 app.use(cookieParser());
@@ -89,7 +90,23 @@ app.get('/health', (req, res, next) => {
     res.send(Date.now() + "");
 });
 
-app.get('/stats', function(req, res, next) {
+app.get('/delete', function (req, res, next) {
+    redisUtility.flushdb(function (errorInFlushing) {
+        if (errorInFlushing) {
+            res.status(500).json({
+                    error: error
+            });
+            return;
+        }
+
+        _initializeBuckets();
+        res.status(200).json({
+            success: true
+        });
+    });
+});
+
+app.get('/stats', function (req, res, next) {
     var host = req.get('host');
     redisUtility.hgetall(_getBucketCollectionName(host), function (someError, data) {
         if (someError) {
@@ -275,7 +292,7 @@ app.use(function (req, res, next) {
 
         } else {
             basicBrowser = true;
-            
+
         }
 
         if (basicBrowser) {
@@ -290,20 +307,20 @@ app.use(function (req, res, next) {
 
 // Getting the access token for the current user
 app.use((req, res, next) => {
-    
-    
+
+
 
     var accessToken = req.cookies["access_token"];
     var url = APPENGINE_ENDPOINT + "/ecs/accesstoken";
     if (accessToken) url += "?accessToken=" + accessToken;
     request(url, (error, response, body) => {
         if (error) {
-            
+
             res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
         } else {
             try { accessToken = JSON.parse(body)["accessToken"]; } catch (e) {}
             if (!accessToken) {
-                
+
                 res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
             } else {
                 var domain = process.env.STAGE === 'devo' ? '.ptlp.co' : '.pratilipi.com';
@@ -324,8 +341,8 @@ app.use((req, res, next) => {
 
 // Serving mini website
 app.get('/*', (req, res, next) => {
-    
-    
+
+
     var web = TRAFFIC_CONFIG[req.headers.host];
     if (web.BASIC_VERSION) {
         res.locals["redirection"] = 'MINI';
@@ -337,8 +354,8 @@ app.get('/*', (req, res, next) => {
 
 // Master website: www.pratilipi.com
 app.get('/*', (req, res, next) => {
-    
-    
+
+
     var web = TRAFFIC_CONFIG[req.headers.host];
     if (web.VERSION === "ALL_LANGUAGE" || web.VERSION === "GAMMA_ALL_LANGUAGE") {
         res.locals["redirection"] = 'MINI';
@@ -351,8 +368,8 @@ app.get('/*', (req, res, next) => {
 // Other urls where PWA is not supported
 app.get('/*', (req, res, next) => {
 
-    
-    
+
+
     var forwardToMini = false;
     if (req.path === '/pratilipi-write' ||
         req.path === '/write' ||
@@ -389,8 +406,8 @@ app.get('/*', (req, res, next) => {
 // Domains with predefined stack to be redirected to their particular stack
 app.use(function (req, res, next) {
 
-    
-    
+
+
 
     if (res.locals && res.locals["redirection"] === "MINI") {
         next();
@@ -542,9 +559,9 @@ app.use(function (req, res, next) {
 
     const currentAccessToken = res.locals["access-token"];
     const hostName = req.headers.host;
-    
-    
-    
+
+
+
     async.waterfall([
         function (waterfallCallback) {
             _getCurrentUserStatus(currentAccessToken, hostName, function (userDetailsParseError, fetchedBucketId) {
@@ -599,9 +616,9 @@ app.use(function (req, res, next) {
     const currentAccessToken = res.locals["access-token"];
     const hostName = req.headers.host;
 
-    
-    
-    
+
+
+
 
     async.waterfall([
 
@@ -610,7 +627,7 @@ app.use(function (req, res, next) {
                 if (bucketDetailsFetchError || !fetchedBucketDetails) {
                     waterfallCallback(bucketDetailsFetchError || 'No bucket has been setup for this domain');
                 } else {
-                    
+
                     waterfallCallback(null, fetchedBucketDetails);
                 }
             });
@@ -620,16 +637,16 @@ app.use(function (req, res, next) {
             var fetchedBucketDetails = Object.keys(fetchedBucketDetailsObj).map(function (key) { return fetchedBucketDetailsObj[key]; });
             const valueOfBucketWithMinimumUsers = Math.min.apply(null, fetchedBucketDetails);
 
-            
-            
-            
+
+
+
 
             const updatedValueOfBucket = valueOfBucketWithMinimumUsers + 1;
             const indexOfBucketWithMinimumUsers = fetchedBucketDetails.indexOf(String(valueOfBucketWithMinimumUsers));
 
-            
-            
-            
+
+
+
             _incrementBucketStatisticsValue(hostName, indexOfBucketWithMinimumUsers, updatedValueOfBucket, function (bucketStatisticsUpdateError) {
                 if (bucketStatisticsUpdateError) {
                     waterfallCallback(bucketStatisticsUpdateError);
