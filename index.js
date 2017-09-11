@@ -97,12 +97,12 @@ app.get('/health', (req, res, next) => {
  *  app.enable('trust proxy') allows express to check the X-Forwarded-Proto header.
  */
 app.enable('trust proxy');
-app.use((req, res, next) => {
-    if (req.secure || (TRAFFIC_CONFIG[req.headers.host] && TRAFFIC_CONFIG[req.headers.host].VERSION === "ALPHA")) {
-        return next();
-    }
-    res.redirect("https://" + req.headers.host + req.url);
-});
+// app.use((req, res, next) => {
+//     if (req.secure || (TRAFFIC_CONFIG[req.headers.host] && TRAFFIC_CONFIG[req.headers.host].VERSION === "ALPHA")) {
+//         return next();
+//     }
+//     res.redirect("https://" + req.headers.host + req.url);
+// });
 
 // https://www.hindi.pratilipi.com -> https://hindi.pratilipi.com
 app.use((req, res, next) => {
@@ -279,6 +279,9 @@ app.use(function (req, res, next) {
 
 // Getting the access token for the current user
 app.use((req, res, next) => {
+    console.log('-------------------REACHED ACCESS TOKEN MIDDLEWARE-----------------');
+    console.log('-------------------REACHED ACCESS TOKEN MIDDLEWARE-----------------');
+
     if (req.path.isStaticFileRequest()) {
         next();
     } else {
@@ -315,6 +318,8 @@ app.use((req, res, next) => {
 
 // Serving mini website
 app.get('/*', (req, res, next) => {
+    console.log('-------------------REACHED MINI SERVING MIDDLEWARE-----------------');
+    console.log('-------------------REACHED MINI SERVING MIDDLEWARE-----------------');
     var web = TRAFFIC_CONFIG[req.headers.host];
     if (web.BASIC_VERSION) {
         res.locals["redirection"] = 'MINI';
@@ -326,6 +331,8 @@ app.get('/*', (req, res, next) => {
 
 // Master website: www.pratilipi.com
 app.get('/*', (req, res, next) => {
+    console.log('-------------------REACHED MASTER SERVING MIDDLEWARE-----------------');
+    console.log('-------------------REACHED MASTER SERVING MIDDLEWARE-----------------');
     var web = TRAFFIC_CONFIG[req.headers.host];
     if (web.VERSION === "ALL_LANGUAGE" || web.VERSION === "GAMMA_ALL_LANGUAGE") {
         res.locals["redirection"] = 'MINI';
@@ -338,6 +345,8 @@ app.get('/*', (req, res, next) => {
 // Other urls where PWA is not supported
 app.get('/*', (req, res, next) => {
 
+    console.log('-------------------REACHED NON-PWA ROUTE SERVING MIDDLEWARE-----------------');
+    console.log('-------------------REACHED NON-PWA ROUTE SERVING MIDDLEWARE-----------------');
     var forwardToMini = false;
     if (req.path === '/pratilipi-write' ||
         req.path === '/write' ||
@@ -373,6 +382,10 @@ app.get('/*', (req, res, next) => {
 
 // Domains with predefined stack to be redirected to their particular stack
 app.use(function (req, res, next) {
+
+    console.log('-------------------REACHED PREDEFINED STACK SERVING MIDDLEWARE-----------------');
+    console.log('-------------------REACHED PREDEFINED STACK SERVING MIDDLEWARE-----------------');
+
     // const currentHostName = req.headers.host.match(/:/g) ? req.headers.host.slice(0, req.headers.host.indexOf(":")) : req.headers.host;
     const currentHostName = req.headers.host;
     const hostConfig = TRAFFIC_CONFIG[currentHostName];

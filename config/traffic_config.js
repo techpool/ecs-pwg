@@ -591,18 +591,18 @@ module.exports = {
         "TTL": 14,
         "VERSION": "DEVO_ALL_LANGUAGE_GR"
     },
-    "hindi-devo-gr.ptlp.co":
+    "hindi-devo-gr.ptlp.co:84":
     {
         "STACK": "GROWTH",
-        "BASIC_DOMAIN": "hi-devo-gr.ptlp.co",
+        "BASIC_DOMAIN": "hi-devo-gr.ptlp.co:84",
         "BASIC_VERSION": false,
         "TTL": 14,
         "VERSION": "DEVO_HINDI_GR"
     },
-    "hi-devo-gr.ptlp.co":
+    "hi-devo-gr.ptlp.co:84":
     {
         "STACK": "PRODUCT",
-        "BASIC_DOMAIN": "hi-devo-gr.ptlp.co",
+        "BASIC_DOMAIN": "hi-devo-gr.ptlp.co:84",
         "BASIC_VERSION": true,
         "TTL": 14,
         "VERSION": "DEVO_HINDI_GR"
