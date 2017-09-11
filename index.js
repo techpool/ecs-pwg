@@ -564,6 +564,7 @@ app.use(function (req, res, next) {
             res.locals["redirection"] === "MINI"
         )
     ) {
+        next();
         return;
     }
 
