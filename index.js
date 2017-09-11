@@ -66,14 +66,14 @@ for (const hostName in TRAFFIC_CONFIG) {
                 bucketObject[i] = 0;
             }
 
-            console.log(bucketObject);
+            
 
             redisUtility.hmset(bucketName, bucketObject, function (error) {
-                console.log(error);
-                console.log('Created bucket in redis for hostname: ' + hostName);
+                
+                
 
                 redisUtility.hgetall(_getBucketCollectionName(hostName), function (someError, data) {
-                    console.log(data);
+                    
                 });
             });
         }
@@ -85,8 +85,19 @@ app.use(cookieParser());
 
 // Health middleware
 app.get('/health', (req, res, next) => {
-    console.log("Healthy!");
+    console.log('Healthy!');
     res.send(Date.now() + "");
+});
+
+app.get('/stats', function(req, res, next) {
+    var host = req.get('host');
+    redisUtility.hgetall(_getBucketCollectionName(host), function (someError, data) {
+        if (someError) {
+            res.status(500).json(someError);
+        } else {
+            res.status(200).json(data);
+        }
+    });
 });
 
 /*
@@ -264,7 +275,7 @@ app.use(function (req, res, next) {
 
         } else {
             basicBrowser = true;
-            console.log("UNKNOWN_USER_AGENT :: " + userAgent);
+            
         }
 
         if (basicBrowser) {
@@ -279,20 +290,20 @@ app.use(function (req, res, next) {
 
 // Getting the access token for the current user
 app.use((req, res, next) => {
-    console.log('-------------------REACHED ACCESS TOKEN MIDDLEWARE-----------------');
-    console.log('-------------------REACHED ACCESS TOKEN MIDDLEWARE-----------------');
+    
+    
 
     var accessToken = req.cookies["access_token"];
     var url = APPENGINE_ENDPOINT + "/ecs/accesstoken";
     if (accessToken) url += "?accessToken=" + accessToken;
     request(url, (error, response, body) => {
         if (error) {
-            console.log('ACCESS_TOKEN_ERROR :: ', error);
+            
             res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
         } else {
             try { accessToken = JSON.parse(body)["accessToken"]; } catch (e) {}
             if (!accessToken) {
-                console.log('ACCESS_TOKEN_CALL_ERROR');
+                
                 res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
             } else {
                 var domain = process.env.STAGE === 'devo' ? '.ptlp.co' : '.pratilipi.com';
@@ -313,8 +324,8 @@ app.use((req, res, next) => {
 
 // Serving mini website
 app.get('/*', (req, res, next) => {
-    console.log('-------------------REACHED MINI SERVING MIDDLEWARE-----------------');
-    console.log('-------------------REACHED MINI SERVING MIDDLEWARE-----------------');
+    
+    
     var web = TRAFFIC_CONFIG[req.headers.host];
     if (web.BASIC_VERSION) {
         res.locals["redirection"] = 'MINI';
@@ -326,8 +337,8 @@ app.get('/*', (req, res, next) => {
 
 // Master website: www.pratilipi.com
 app.get('/*', (req, res, next) => {
-    console.log('-------------------REACHED MASTER SERVING MIDDLEWARE-----------------');
-    console.log('-------------------REACHED MASTER SERVING MIDDLEWARE-----------------');
+    
+    
     var web = TRAFFIC_CONFIG[req.headers.host];
     if (web.VERSION === "ALL_LANGUAGE" || web.VERSION === "GAMMA_ALL_LANGUAGE") {
         res.locals["redirection"] = 'MINI';
@@ -340,8 +351,8 @@ app.get('/*', (req, res, next) => {
 // Other urls where PWA is not supported
 app.get('/*', (req, res, next) => {
 
-    console.log('-------------------REACHED NON-PWA ROUTE SERVING MIDDLEWARE-----------------');
-    console.log('-------------------REACHED NON-PWA ROUTE SERVING MIDDLEWARE-----------------');
+    
+    
     var forwardToMini = false;
     if (req.path === '/pratilipi-write' ||
         req.path === '/write' ||
@@ -378,8 +389,8 @@ app.get('/*', (req, res, next) => {
 // Domains with predefined stack to be redirected to their particular stack
 app.use(function (req, res, next) {
 
-    console.log('-------------------REACHED PREDEFINED STACK SERVING MIDDLEWARE-----------------');
-    console.log('-------------------REACHED PREDEFINED STACK SERVING MIDDLEWARE-----------------');
+    
+    
 
     if (res.locals && res.locals["redirection"] === "MINI") {
         next();
@@ -531,9 +542,9 @@ app.use(function (req, res, next) {
 
     const currentAccessToken = res.locals["access-token"];
     const hostName = req.headers.host;
-    console.log('-------REACHED: Redirection of users who has been previously served a version----------');
-    console.log(currentAccessToken);
-    console.log('-------REACHED: Redirection of users who has been previously served a version----------');
+    
+    
+    
     async.waterfall([
         function (waterfallCallback) {
             _getCurrentUserStatus(currentAccessToken, hostName, function (userDetailsParseError, fetchedBucketId) {
@@ -588,9 +599,9 @@ app.use(function (req, res, next) {
     const currentAccessToken = res.locals["access-token"];
     const hostName = req.headers.host;
 
-    console.log('-------REACHED: Middleware to handle new users whose access token has not been saved in redis----------');
-    console.log(currentAccessToken);
-    console.log('-------REACHED: Middleware to handle new users whose access token has not been saved in redis----------');
+    
+    
+    
 
     async.waterfall([
 
@@ -599,7 +610,7 @@ app.use(function (req, res, next) {
                 if (bucketDetailsFetchError || !fetchedBucketDetails) {
                     waterfallCallback(bucketDetailsFetchError || 'No bucket has been setup for this domain');
                 } else {
-                    console.log(fetchedBucketDetails);
+                    
                     waterfallCallback(null, fetchedBucketDetails);
                 }
             });
@@ -609,16 +620,16 @@ app.use(function (req, res, next) {
             var fetchedBucketDetails = Object.keys(fetchedBucketDetailsObj).map(function (key) { return fetchedBucketDetailsObj[key]; });
             const valueOfBucketWithMinimumUsers = Math.min.apply(null, fetchedBucketDetails);
 
-            console.log('---------VALUE OF BUCKET WITH MINIMUM USERS----------');
-            console.log(valueOfBucketWithMinimumUsers);
-            console.log('---------VALUE OF BUCKET WITH MINIMUM USERS----------');
+            
+            
+            
 
             const updatedValueOfBucket = valueOfBucketWithMinimumUsers + 1;
             const indexOfBucketWithMinimumUsers = fetchedBucketDetails.indexOf(String(valueOfBucketWithMinimumUsers));
 
-            console.log('---------INDEX OF BUCKET WITH MINIMUM USERS----------');
-            console.log(indexOfBucketWithMinimumUsers);
-            console.log('---------INDEX OF BUCKET WITH MINIMUM USERS----------');
+            
+            
+            
             _incrementBucketStatisticsValue(hostName, indexOfBucketWithMinimumUsers, updatedValueOfBucket, function (bucketStatisticsUpdateError) {
                 if (bucketStatisticsUpdateError) {
                     waterfallCallback(bucketStatisticsUpdateError);
@@ -649,9 +660,6 @@ app.use(function (req, res, next) {
         }
     ], function (error, redirectLocation) {
         if (error) {
-            console.log('--------------ERROR-------------');
-            console.log(error);
-            console.log('--------------ERROR-------------');
             res.locals["redirection"] = "PRODUCT";
             next();
         } else if (redirectLocation === 'REDIRECT_TO_GROWTH') {
@@ -676,11 +684,6 @@ app.use(function (req, res, next) {
 
 app.listen(CONFIG.SERVICE_PORT, function (error) {
     if (error) {
-        console.log('---------------SERVER STARTUP ERROR---------------');
-        console.log(error);
-        console.log('---------------SERVER STARTUP ERROR---------------');
         return;
     }
-
-    console.log('Server is listening on port: ', CONFIG.SERVICE_PORT);
 });
