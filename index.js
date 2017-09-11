@@ -528,9 +528,19 @@ function _addShadowKeyForUser(originalKeyName, bucketId, callback) {
 }
 
 function _redirectToGrowth(req, res) {
-    res.status(200).json({
-        'info': 'Growth version is to be served here'
-    });
+    request.get({
+        uri: CONFIG.PWG_LOAD_BALANCER + ':8080' + req.path,
+        method: req.method,
+        qs: req.query,
+        headers: req.headers,
+        followAllRedirects: false,
+        followRedirect: false,
+        jar: true
+    }).on('response',
+        function (response) {
+            res.writeHead(response.statusCode, response.headers);
+        }
+    ).pipe(res);
 }
 
 function _redirectToProduct(req, res) {
