@@ -91,14 +91,14 @@ app.get('/health', (req, res, next) => {
 
 /*
  *   http -> https redirection
- *	If your app is behind a trusted proxy (e.g. an AWS ELB or a correctly configured nginx), this code should work.
- *	This assumes that you're hosting your site on 80 and 443, if not, you'll need to change the port when you redirect.
- *	This also assumes that you're terminating the SSL on the proxy. If you're doing SSL end to end use the answer from @basarat above. End to end SSL is the better solution.
- *	app.enable('trust proxy') allows express to check the X-Forwarded-Proto header.
+ *  If your app is behind a trusted proxy (e.g. an AWS ELB or a correctly configured nginx), this code should work.
+ *  This assumes that you're hosting your site on 80 and 443, if not, you'll need to change the port when you redirect.
+ *  This also assumes that you're terminating the SSL on the proxy. If you're doing SSL end to end use the answer from @basarat above. End to end SSL is the better solution.
+ *  app.enable('trust proxy') allows express to check the X-Forwarded-Proto header.
  */
 app.enable('trust proxy');
 app.use((req, res, next) => {
-    if (req.secure || TRAFFIC_CONFIG[req.headers.host].VERSION === "ALPHA") {
+    if (req.secure || (TRAFFIC_CONFIG[req.headers.host] && TRAFFIC_CONFIG[req.headers.host].VERSION === "ALPHA")) {
         return next();
     }
     res.redirect("https://" + req.headers.host + req.url);
@@ -237,13 +237,13 @@ app.use(function (req, res, next) {
             //   Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/534.57.2 (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2
 
             // if( userAgent.contains( "Version" ) ) {
-            // 		var userAgentSubStr = userAgent.substring( userAgent.indexOf( "Version" ) + 8 );
-            // 		var version = parseInt( userAgentSubStr.substring( 0, userAgentSubStr.indexOf( "." ) ) );
-            // 		basicBrowser = version < 8;
+            //      var userAgentSubStr = userAgent.substring( userAgent.indexOf( "Version" ) + 8 );
+            //      var version = parseInt( userAgentSubStr.substring( 0, userAgentSubStr.indexOf( "." ) ) );
+            //      basicBrowser = version < 8;
             // } else {
-            // 		var userAgentSubStr = userAgent.substring( userAgent.indexOf( "Safari" ) + 7 );
-            // 		var version = parseInt( userAgentSubStr.substring( 0, userAgentSubStr.indexOf( "." ) ) );
-            // 		basicBrowser = version < 538 || version > 620;
+            //      var userAgentSubStr = userAgent.substring( userAgent.indexOf( "Safari" ) + 7 );
+            //      var version = parseInt( userAgentSubStr.substring( 0, userAgentSubStr.indexOf( "." ) ) );
+            //      basicBrowser = version < 538 || version > 620;
             // }
 
             basicBrowser = false;
@@ -329,7 +329,7 @@ app.get('/*', (req, res, next) => {
     var web = TRAFFIC_CONFIG[req.headers.host];
     if (web.VERSION === "ALL_LANGUAGE" || web.VERSION === "GAMMA_ALL_LANGUAGE") {
         res.locals["redirection"] = 'MINI';
-    	next();
+        next();
     } else {
         next();
     }
@@ -639,7 +639,7 @@ app.use(function (req, res, next) {
     } else if (res.locals["redirection"] === "MINI") {
         _redirectToMini(req, res);
     } else {
-    	_redirectToProduct(req, res);
+        _redirectToProduct(req, res);
     }
 });
 
