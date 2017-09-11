@@ -8,7 +8,7 @@ module.exports = {
 	devo: {
 		'SERVICE_PORT': 80,
 		'REDIS_NOTIFY_EVENTS': 'Ex',
-		'REDIS_HOST': 'ecs-growth.cpzshl.0001.apse1.cache.amazonaws.com',
+		'REDIS_HOST': 'growth-ecs.e6ocw5.0001.apse1.cache.amazonaws.com',
 		'REDIS_PORT': 8080,
 	},
 	gamma: {
