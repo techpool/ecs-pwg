@@ -386,6 +386,11 @@ app.use(function (req, res, next) {
     console.log('-------------------REACHED PREDEFINED STACK SERVING MIDDLEWARE-----------------');
     console.log('-------------------REACHED PREDEFINED STACK SERVING MIDDLEWARE-----------------');
 
+    if (res.locals && res.locals["redirection"] === "MINI") {
+        next();
+        return;
+    }
+
     // const currentHostName = req.headers.host.match(/:/g) ? req.headers.host.slice(0, req.headers.host.indexOf(":")) : req.headers.host;
     const currentHostName = req.headers.host;
     const hostConfig = TRAFFIC_CONFIG[currentHostName];
@@ -401,6 +406,23 @@ app.use(function (req, res, next) {
         next();
     } else if (hostConfig.STACK === "PRODUCT") {
         res.locals["redirection"] = "PRODUCT";
+        next();
+    } else {
+        next();
+    }
+});
+
+// Middleware to do forced loading of any stack on any domain
+app.use(function(req, res, next) {
+    const forcedStack = req.query.stack;
+    if (forcedStack === "GROWTH") {
+        res.locals["redirection"] = "GROWTH";
+        next();
+    } else if (forcedStack === "PRODUCT") {
+        res.locals["redirection"] = "PRODUCT";
+        next();
+    } else if (forcedStack === "MINI") {
+        res.locals["redirection"] = "MINI";
         next();
     } else {
         next();
