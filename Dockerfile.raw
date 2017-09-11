@@ -5,9 +5,12 @@ COPY package-lock.json .
 RUN npm install
 
 COPY index.js .
+
 COPY config/main.js config/main.js
 COPY config/traffic_config.js config/traffic_config.js
+
 COPY lib/redisUtility.js lib/redisUtility.js
+COPY lib/redisCleaner.js lib/redisCleaner.js
 
 EXPOSE 80
 

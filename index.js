@@ -165,7 +165,7 @@ app.use((req, res, next) => {
 // Redirection for mini domains based on User-Agent headers
 app.use(function (req, res, next) {
     var web = TRAFFIC_CONFIG[req.headers.host]
-    if (req.headers.host !== web.BASIC_DOMAIN && process.env.STAGE === "prod") {
+    if (!web.BASIC_VERSION && process.env.STAGE === "prod") {
 
         var userAgent = req.get('User-Agent');
         var basicBrowser = false;
@@ -316,7 +316,7 @@ app.use((req, res, next) => {
 // Serving mini website
 app.get('/*', (req, res, next) => {
     var web = TRAFFIC_CONFIG[req.headers.host];
-    if (req.headers.host === web.BASIC_DOMAIN) {
+    if (web.BASIC_VERSION) {
         res.locals["redirection"] = 'MINI';
         next();
     } else {
