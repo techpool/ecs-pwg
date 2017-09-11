@@ -681,8 +681,8 @@ app.use(function (req, res, next) {
             done(error, redirectLocation);
         });
 
-    }, function (err, ret) {
-        if (error) {
+    }, function (err, redirectLocation) {
+        if (err) {
             res.locals["redirection"] = "PRODUCT";
             next();
         } else if (redirectLocation === 'REDIRECT_TO_GROWTH') {
