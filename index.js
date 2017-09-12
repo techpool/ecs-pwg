@@ -494,7 +494,7 @@ app.get('/*', (req, res, next) => {
 app.use(function (req, res, next) {
     let forcedStack = req.query.stack;
 
-    const referer = req.header('Referer') != null ? req.header('Referer') : "";
+    const referer = req.headers['referer'] != null ? req.headers['referer'] : "";
     if (req.path.isStaticFileRequest() && referer.length > 0) {
         const url = new URL(referer);
 
