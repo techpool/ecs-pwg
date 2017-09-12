@@ -500,7 +500,7 @@ app.use(function (req, res, next) {
         next();
         return;
     }
-    
+
     const referer = req.headers['referer'] != null ? req.headers['referer'] : "";
     if (req.path.isStaticFileRequest() && referer.length > 0) {
         const url = new URL(referer);
@@ -807,6 +807,7 @@ app.use(function (req, res, next) {
                 console.log("Bucket ID: ", indexOfBucketWithMinimumUsers);
                 console.log("Bucket Value: ", updatedValueOfBucket);
                 console.log("Path: ", req.path);
+                console.log("Cookies: ", req.cookies["access_token"]);
                 console.log('-------------BUCKET BEFORE WRITING------------');
 
                 _incrementBucketStatisticsValue(hostName, indexOfBucketWithMinimumUsers, updatedValueOfBucket, function (bucketStatisticsUpdateError) {
