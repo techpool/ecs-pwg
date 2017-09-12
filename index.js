@@ -499,8 +499,8 @@ app.use(function (req, res, next) {
         const url = new URL(referer);
 
         console.log('----------REFERER-----------');
+        console.log( "req.url", req.url );
         console.log( "req.headers['referer']", req.headers['referer'] );
-        console.log( "req.getHeader('referer')", req.getHeader('referer') );
         console.log('----------REFERER-----------');
         if (url.query.stack === "GROWTH") {
             res.locals["redirection"] = "GROWTH";
