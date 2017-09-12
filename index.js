@@ -4,6 +4,7 @@ const
     async = require('async'),
     morgan = require('morgan'),
     cookieParser = require('cookie-parser'),
+    URL = require('url-parse'),
     AsyncLock = require('async-lock');
 
 const
@@ -191,6 +192,89 @@ app.use((req, res, next) => {
         return res.redirect(301, (req.secure ? 'https://' : 'http://') + req.get('host') + "/api/pratilipi/content/image" + "?" + req.url.split('?')[1]);
     else
         next();
+});
+
+// Crawling Urls like robots.txt, sitemap
+app.get('/*', (req, res, next) => {
+    if (process.env.STAGE === "prod") {
+        if (req.path === '/sitemap' || req.path === '/robots.txt') {
+            var url = APPENGINE_ENDPOINT + req.url;
+            request.get({
+                uri: url,
+                method: req.method,
+                qs: req.query,
+                headers: req.headers,
+                followAllRedirects: false,
+                followRedirect: false,
+                jar: true
+            }).on('response',
+                function (response) {
+                    res.writeHead(response.statusCode, response.headers);
+                }
+            ).pipe(res);
+        } else
+            next();
+    } else {
+        next();
+    }
+});
+
+
+// Crawlers - only for prod and gamma env
+app.get('/*', (req, res, next) => {
+
+    if (process.env.STAGE === "prod" || process.env.STAGE === "gamma") {
+
+        var userAgent = req.get('User-Agent');
+        var isCrawler = false;
+
+        if (!userAgent) {
+            // Do Nothing
+
+        } else if (userAgent.contains("Googlebot")) { // Googlebot/2.1; || Googlebot-News || Googlebot-Image/1.0 || Googlebot-Video/1.0
+            isCrawler = true;
+
+        } else if (userAgent === "Google (+https://developers.google.com/+/web/snippet/)") { // Google+
+            isCrawler = true;
+
+        } else if (userAgent.contains("Bingbot")) { // Microsoft Bing
+            isCrawler = true;
+
+        } else if (userAgent.contains("Slurp")) { // Yahoo
+            isCrawler = true;
+
+        } else if (userAgent.contains("DuckDuckBot")) { // DuckDuckGo
+            isCrawler = true;
+
+        } else if (userAgent.contains("Baiduspider")) { // Baidu - China
+            isCrawler = true;
+
+        } else if (userAgent.contains("YandexBot")) { // Yandex - Russia
+            isCrawler = true;
+
+        } else if (userAgent.contains("Exabot")) { // ExaLead - France
+            isCrawler = true;
+
+        } else if (userAgent === "facebot" ||
+            userAgent.startsWith("facebookexternalhit/1.0") ||
+            userAgent.startsWith("facebookexternalhit/1.1")) { // Facebook Scraping requests
+            isCrawler = true;
+
+        } else if (userAgent.startsWith("WhatsApp")) { // Whatsapp
+            isCrawler = true;
+
+        } else if (userAgent.startsWith("ia_archiver")) { // Alexa Crawler
+            isCrawler = true;
+        }
+
+        if (isCrawler) {
+            _redirectToMini(req, res);
+        } else {
+            next();
+        }
+    } else {
+        next();
+    }
 });
 
 // Redirection for mini domains based on User-Agent headers
@@ -406,13 +490,42 @@ app.get('/*', (req, res, next) => {
 // Traffic splitting logic
 // ========================================
 
+// Middleware to do forced loading of any stack on any domain
+app.use(function (req, res, next) {
+    let forcedStack = req.query.stack;
+
+    const referer = req.header('Referer') != null ? req.header('Referer') : "";
+    if (req.path.isStaticFileRequest() && referer.length > 0) {
+        const url = new URL(referer);
+        if (url.query.stack === "GROWTH") {
+            res.locals["redirection"] = "GROWTH";
+        } else if (url.query.stack === "MINI") {
+            res.locals["redirection"] = "MINI";
+        } else {
+            res.locals["redirection"] = "PRODUCT";
+        }
+
+        next();
+        return;
+    }
+
+    if (forcedStack === "GROWTH") {
+        res.locals["redirection"] = "GROWTH";
+        next();
+    } else if (forcedStack === "PRODUCT") {
+        res.locals["redirection"] = "PRODUCT";
+        next();
+    } else if (forcedStack === "MINI") {
+        res.locals["redirection"] = "MINI";
+        next();
+    } else {
+        next();
+    }
+});
+
 // Domains with predefined stack to be redirected to their particular stack
 app.use(function (req, res, next) {
-
-
-
-
-    if (res.locals && res.locals["redirection"] === "MINI") {
+    if (res.locals && res.locals["redirection"]) {
         next();
         return;
     }
@@ -432,23 +545,6 @@ app.use(function (req, res, next) {
         next();
     } else if (hostConfig.STACK === "PRODUCT") {
         res.locals["redirection"] = "PRODUCT";
-        next();
-    } else {
-        next();
-    }
-});
-
-// Middleware to do forced loading of any stack on any domain
-app.use(function (req, res, next) {
-    const forcedStack = req.query.stack;
-    if (forcedStack === "GROWTH") {
-        res.locals["redirection"] = "GROWTH";
-        next();
-    } else if (forcedStack === "PRODUCT") {
-        res.locals["redirection"] = "PRODUCT";
-        next();
-    } else if (forcedStack === "MINI") {
-        res.locals["redirection"] = "MINI";
         next();
     } else {
         next();
