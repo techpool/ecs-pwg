@@ -780,7 +780,11 @@ app.use(function (req, res, next) {
                 const indexOfBucketWithMinimumUsers = fetchedBucketDetails.indexOf(String(valueOfBucketWithMinimumUsers));
 
 
-
+                console.log('-------------BUCKET BEFORE WRITING------------');
+                console.log("Bucket ID: ", indexOfBucketWithMinimumUsers);
+                console.log("Bucket Value: ", updatedValueOfBucket);
+                console.log("Path: ", req.path);
+                console.log('-------------BUCKET BEFORE WRITING------------');
 
                 _incrementBucketStatisticsValue(hostName, indexOfBucketWithMinimumUsers, updatedValueOfBucket, function (bucketStatisticsUpdateError) {
                     if (bucketStatisticsUpdateError) {
