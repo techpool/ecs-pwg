@@ -544,9 +544,19 @@ function _redirectToGrowth(req, res) {
 }
 
 function _redirectToProduct(req, res) {
-    res.status(200).json({
-        'info': 'Product version is to be served here'
-    });
+    request.get({
+        uri: CONFIG.PWG_LOAD_BALANCER + req.path,
+        method: req.method,
+        qs: req.query,
+        headers: req.headers,
+        followAllRedirects: false,
+        followRedirect: false,
+        jar: true
+    }).on('response',
+        function (response) {
+            res.writeHead(response.statusCode, response.headers);
+        }
+    ).pipe(res);
 }
 
 function _redirectToMini(req, res) {
