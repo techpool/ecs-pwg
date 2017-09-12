@@ -497,6 +497,11 @@ app.use(function (req, res, next) {
     const referer = req.header('Referer') != null ? req.header('Referer') : "";
     if (req.path.isStaticFileRequest() && referer.length > 0) {
         const url = new URL(referer);
+
+        console.log('----------REFERER-----------');
+        console.log(referer);
+        console.log(url);
+        console.log('----------REFERER-----------');
         if (url.query.stack === "GROWTH") {
             res.locals["redirection"] = "GROWTH";
         } else if (url.query.stack === "MINI") {
