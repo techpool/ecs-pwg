@@ -506,7 +506,7 @@ app.use(function (req, res, next) {
             res.locals["redirection"] = "GROWTH";
         } else if (url.query.stack === "MINI") {
             res.locals["redirection"] = "MINI";
-        } else {
+        } else if (url.query.stack === "PRODUCT") {
             res.locals["redirection"] = "PRODUCT";
         }
 
