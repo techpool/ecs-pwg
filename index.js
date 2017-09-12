@@ -128,12 +128,12 @@ app.get('/stats', function (req, res, next) {
  *  app.enable('trust proxy') allows express to check the X-Forwarded-Proto header.
  */
 app.enable('trust proxy');
-// app.use((req, res, next) => {
-//     if (req.secure || (TRAFFIC_CONFIG[req.headers.host] && TRAFFIC_CONFIG[req.headers.host].VERSION === "ALPHA")) {
-//         return next();
-//     }
-//     res.redirect("https://" + req.headers.host + req.url);
-// });
+app.use((req, res, next) => {
+    if (req.secure || (TRAFFIC_CONFIG[req.headers.host] && TRAFFIC_CONFIG[req.headers.host].VERSION === "ALPHA")) {
+        return next();
+    }
+    res.redirect("https://" + req.headers.host + req.url);
+});
 
 // https://www.hindi.pratilipi.com -> https://hindi.pratilipi.com
 app.use((req, res, next) => {
