@@ -397,34 +397,37 @@ app.use(function (req, res, next) {
 app.use((req, res, next) => {
 
 
-
-    var accessToken = req.cookies["access_token"];
-    var url = APPENGINE_ENDPOINT + "/ecs/accesstoken";
-    if (accessToken) url += "?accessToken=" + accessToken;
-    request(url, (error, response, body) => {
-        if (error) {
-
-            res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
-        } else {
-            try { accessToken = JSON.parse(body)["accessToken"]; } catch (e) {}
-            if (!accessToken) {
+    if (req.path.isStaticFileRequest()) {
+        next();
+    } else {
+        var accessToken = req.cookies["access_token"];
+        var url = APPENGINE_ENDPOINT + "/ecs/accesstoken";
+        if (accessToken) url += "?accessToken=" + accessToken;
+        request(url, (error, response, body) => {
+            if (error) {
 
                 res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
             } else {
-                var domain = process.env.STAGE === 'devo' ? '.ptlp.co' : '.pratilipi.com';
-                if (TRAFFIC_CONFIG[req.headers.host]["VERSION"] === "ALPHA")
-                    domain = "localhost";
-                res.locals["access-token"] = accessToken;
-                res.cookie('access_token', accessToken, {
-                    domain: domain,
-                    path: '/',
-                    maxAge: 30 * 24 * 3600000, // 30 days
-                    httpOnly: false
-                });
-                next();
+                try { accessToken = JSON.parse(body)["accessToken"]; } catch (e) {}
+                if (!accessToken) {
+
+                    res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
+                } else {
+                    var domain = process.env.STAGE === 'devo' ? '.ptlp.co' : '.pratilipi.com';
+                    if (TRAFFIC_CONFIG[req.headers.host]["VERSION"] === "ALPHA")
+                        domain = "localhost";
+                    res.locals["access-token"] = accessToken;
+                    res.cookie('access_token', accessToken, {
+                        domain: domain,
+                        path: '/',
+                        maxAge: 30 * 24 * 3600000, // 30 days
+                        httpOnly: false
+                    });
+                    next();
+                }
             }
-        }
-    });
+        });
+    }
 });
 
 // Serving mini website
@@ -491,16 +494,20 @@ app.get('/*', (req, res, next) => {
 // Traffic splitting logic
 // ========================================
 
-// Middleware to do forced loading of any stack on any domain
+
 app.use(function (req, res, next) {
-    let forcedStack = req.query.stack;
+    if (res.locals && res.locals["redirection"]) {
+        next();
+        return;
+    }
+    
     const referer = req.headers['referer'] != null ? req.headers['referer'] : "";
     if (req.path.isStaticFileRequest() && referer.length > 0) {
         const url = new URL(referer);
 
         console.log('----------REFERER-----------');
-        console.log( "req.url", req.url );
-        console.log( "req.headers['referer']", req.headers['referer'] );
+        console.log("req.url", req.url);
+        console.log("req.headers['referer']", req.headers['referer']);
         console.log('----------REFERER-----------');
 
         const query = queryString.parse(url.query);
@@ -514,7 +521,22 @@ app.use(function (req, res, next) {
 
         next();
         return;
+    } else if (req.path.isStaticFileRequest() && !req.cookies["access_token"]) {
+        res.locals["redirection"] = "PRODUCT";
+        next();
+    } else {
+        next();
     }
+});
+
+// Middleware to do forced loading of any stack on any domain
+app.use(function (req, res, next) {
+    if (res.locals && res.locals["redirection"]) {
+        next();
+        return;
+    }
+
+    let forcedStack = req.query.stack;
 
     if (forcedStack === "GROWTH") {
         res.locals["redirection"] = "GROWTH";
@@ -677,6 +699,7 @@ function _redirectToMini(req, res) {
         }
     ).pipe(res);
 }
+
 
 // Redirection of users who has been previously served a version
 app.use(function (req, res, next) {
