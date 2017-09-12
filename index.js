@@ -499,8 +499,8 @@ app.use(function (req, res, next) {
         const url = new URL(referer);
 
         console.log('----------REFERER-----------');
-        console.log(referer);
-        console.log(url);
+        console.log( "req.url", req.url );
+        console.log( "req.headers['referer']", req.headers['referer'] );
         console.log('----------REFERER-----------');
 
         const query = queryString.parse(url.query);
