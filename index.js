@@ -5,6 +5,7 @@ const
     morgan = require('morgan'),
     cookieParser = require('cookie-parser'),
     URL = require('url-parse'),
+    queryString = require('query-string'),
     AsyncLock = require('async-lock');
 
 const
@@ -493,7 +494,6 @@ app.get('/*', (req, res, next) => {
 // Middleware to do forced loading of any stack on any domain
 app.use(function (req, res, next) {
     let forcedStack = req.query.stack;
-
     const referer = req.headers['referer'] != null ? req.headers['referer'] : "";
     if (req.path.isStaticFileRequest() && referer.length > 0) {
         const url = new URL(referer);
@@ -502,11 +502,13 @@ app.use(function (req, res, next) {
         console.log(referer);
         console.log(url);
         console.log('----------REFERER-----------');
-        if (url.query.stack === "GROWTH") {
+
+        const query = queryString.parse(url.query);
+        if (query.stack === "GROWTH") {
             res.locals["redirection"] = "GROWTH";
-        } else if (url.query.stack === "MINI") {
+        } else if (query.stack === "MINI") {
             res.locals["redirection"] = "MINI";
-        } else if (url.query.stack === "PRODUCT") {
+        } else if (query.stack === "PRODUCT") {
             res.locals["redirection"] = "PRODUCT";
         }
 
