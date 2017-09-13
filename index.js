@@ -501,6 +501,15 @@ app.use(function (req, res, next) {
         return;
     }
 
+    if (req.cookies["access_token"]) {
+        next();
+        console.log('-----------------------------------------');
+        console.log('I have a access token and Im going forward');
+        console.log('Path: ', req.path);
+        console.log('-----------------------------------------');
+        return;
+    }
+
     if (!req.path.isStaticFileRequest()) {
         next();
         return;
@@ -733,6 +742,11 @@ app.use(function (req, res, next) {
     async.waterfall([
         function (waterfallCallback) {
             _getCurrentUserStatus(currentAccessToken, hostName, function (userDetailsParseError, fetchedBucketId) {
+                console.log('----------ACCESS TOKEN DETAILS-------------');
+                console.log('Access Token: ', currentAccessToken);
+                console.log('Bucket ID: ', fetchedBucketId);
+                console.log('Any ERROR: ', userDetailsParseError);
+                console.log('----------ACCESS TOKEN DETAILS-------------');
                 waterfallCallback(userDetailsParseError, fetchedBucketId);
             });
         },
