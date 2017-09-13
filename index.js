@@ -39,7 +39,7 @@ switch (process.env.STAGE) {
 const UNEXPECTED_SERVER_EXCEPTION = { "message": "Some exception occurred at server. Please try again." };
 
 String.prototype.isStaticFileRequest = function () {
-    var staticFileExts = [".html", ".css", ".js", ".ico", ".png", ".svg", ".jpg", ".jpeg"];
+    var staticFileExts = [".html", ".css", ".js", ".ico", ".png", ".svg", ".jpg", ".jpeg", ".json"];
     for (var i = 0; i < staticFileExts.length; i++)
         if (this && this.endsWith(staticFileExts[i])) return true;
     return false;
@@ -747,6 +747,10 @@ app.use(function (req, res, next) {
 
     ], function (error, redirectLocation) {
         if (error) {
+            console.log('------------ERROR SOMEWHERE------------');
+            console.log(error);
+            console.log('------------ERROR SOMEWHERE------------');
+
             next();
         } else if (redirectLocation === 'REDIRECT_TO_GROWTH') {
             res.locals["redirection"] = "GROWTH";
@@ -794,9 +798,6 @@ app.use(function (req, res, next) {
             function (fetchedBucketDetailsObj, waterfallCallback) {
                 var fetchedBucketDetails = Object.keys(fetchedBucketDetailsObj).map(function (key) { return fetchedBucketDetailsObj[key]; });
                 const valueOfBucketWithMinimumUsers = Math.min.apply(null, fetchedBucketDetails);
-
-
-
 
 
                 const updatedValueOfBucket = valueOfBucketWithMinimumUsers + 1;
