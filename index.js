@@ -734,7 +734,7 @@ app.use(function (req, res, next) {
     }
 
 
-    const currentAccessToken = res.locals["access-token"];
+    const currentAccessToken = res.locals["access-token"] || req.cookies["access_token"];
     const hostName = req.headers.host;
 
 
@@ -799,7 +799,7 @@ app.use(function (req, res, next) {
         return;
     }
 
-    const currentAccessToken = res.locals["access-token"];
+    const currentAccessToken = res.locals["access-token"] || req.cookies["access_token"];
     const hostName = req.headers.host;
 
 
