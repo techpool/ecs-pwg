@@ -502,7 +502,10 @@ app.use(function (req, res, next) {
     }
 
     const referer = req.headers['referer'] != null ? req.headers['referer'] : "";
-    if (req.path.isStaticFileRequest() && referer.length > 0) {
+    if (req.path.isStaticFileRequest() && !req.cookies["access_token"]) {
+        res.locals["redirection"] = "PRODUCT";
+        next();
+    } else if (req.path.isStaticFileRequest() && referer.length > 0) {
         const url = new URL(referer);
 
         console.log('----------REFERER-----------');
@@ -519,10 +522,6 @@ app.use(function (req, res, next) {
             res.locals["redirection"] = "PRODUCT";
         }
 
-        next();
-        return;
-    } else if (req.path.isStaticFileRequest() && !req.cookies["access_token"]) {
-        res.locals["redirection"] = "PRODUCT";
         next();
     } else {
         next();
