@@ -857,6 +857,10 @@ app.use(function (req, res, next) {
 });
 
 app.use(function (req, res, next) {
+
+    console.log('---------REDIRECTION LOGIC-----------');
+    console.log('REDIRECT TO: ', res.locals.redirection);
+    console.log('---------REDIRECTION LOGIC-----------');
     if (res.locals["redirection"] === "GROWTH") {
         _redirectToGrowth(req, res);
     } else if (res.locals["redirection"] === "MINI") {
