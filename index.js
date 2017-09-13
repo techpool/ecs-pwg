@@ -760,6 +760,11 @@ app.use(function (req, res, next) {
         function (fetchedBucketId, waterfallCallback) {
             const bucketId = fetchedBucketId + 1;
             const trafficDetails = TRAFFIC_CONFIG[hostName];
+            console.log('---------TRAFFIC DETAILS----------');
+            console.log(trafficDetails);
+            console.log('GROWTH Percentage: ', trafficDetails.GROWTH_PERCENTAGE);
+            console.log('Condition: ', trafficDetails.GROWTH_PERCENTAGE >= bucketId);
+            console.log('---------TRAFFIC DETAILS----------');
             if (trafficDetails.GROWTH_PERCENTAGE && trafficDetails.GROWTH_PERCENTAGE >= bucketId) {
                 waterfallCallback(null, 'REDIRECT_TO_GROWTH');
             } else {
