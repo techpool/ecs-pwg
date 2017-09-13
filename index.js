@@ -517,6 +517,9 @@ app.use(function (req, res, next) {
     const query = queryString.parse(url.query);
     const forcedStack = query.stack;
 
+    console.log('Query: ', query);
+    console.log('Forced Stack: ', forcedStack);
+
     if (!req.cookies["access_token"] && !forcedStack) {
         res.locals["redirection"] = "PRODUCT";
         next();
@@ -866,6 +869,9 @@ app.use(function (req, res, next) {
 app.use(function (req, res, next) {
 
     console.log('---------REDIRECTION LOGIC-----------');
+    console.log('Path: ', req.path);
+    console.log('URL: ', req.url);
+    console.log('Cookie: ', req.cookies['access_token']);
     console.log('REDIRECT TO: ', res.locals.redirection);
     console.log('---------REDIRECTION LOGIC-----------');
     if (res.locals["redirection"] === "GROWTH") {
