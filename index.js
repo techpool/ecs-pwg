@@ -501,27 +501,34 @@ app.use(function (req, res, next) {
         return;
     }
 
+    if (!req.path.isStaticFileRequest()) {
+        next();
+        return;
+    }
+
     const referer = req.headers['referer'] != null ? req.headers['referer'] : "";
-    if (req.path.isStaticFileRequest() && !req.cookies["access_token"]) {
+    const url = new URL(referer);
+
+    console.log('----------REFERER-----------');
+    console.log("req.url", req.url);
+    console.log("req.headers['referer']", req.headers['referer']);
+    console.log('----------REFERER-----------');
+
+    const query = queryString.parse(url.query);
+    const forcedStack = query.stack;
+
+    if (!req.cookies["access_token"] && !forcedStack) {
         res.locals["redirection"] = "PRODUCT";
         next();
-    } else if (req.path.isStaticFileRequest() && referer.length > 0) {
-        const url = new URL(referer);
-
-        console.log('----------REFERER-----------');
-        console.log("req.url", req.url);
-        console.log("req.headers['referer']", req.headers['referer']);
-        console.log('----------REFERER-----------');
-
-        const query = queryString.parse(url.query);
-        if (query.stack === "GROWTH") {
-            res.locals["redirection"] = "GROWTH";
-        } else if (query.stack === "MINI") {
-            res.locals["redirection"] = "MINI";
-        } else if (query.stack === "PRODUCT") {
+    } else if (!req.cookies["access_token"] && forcedStack) {
+        if (forcedStack === "GROWTH" || forcedStack === "PRODUCT" || forcedStack === "MINI") {
+            res.locals["redirection"] = forcedStack;
+            next();
+        } else {
             res.locals["redirection"] = "PRODUCT";
+            next();
         }
-
+    } else if (req.cookies["access_token"]) {
         next();
     } else {
         next();
