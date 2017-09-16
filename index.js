@@ -851,11 +851,11 @@ function __redirect(req, res, port) {
 }
 
 function _redirectToGrowth(req, res) {
-    __redirect(req, res, 8080);
+    __redirect(req, res, 8081);
 }
 
 function _redirectToProduct(req, res) {
-    __redirect(req, res, 80);
+    __redirect(req, res, 8080);
 }
 
 function _redirectToMini(req, res) {
