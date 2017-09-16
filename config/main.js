@@ -18,7 +18,7 @@ module.exports = {
 		'REDIS_NOTIFY_EVENTS': 'Ex',
 		'REDIS_HOST': 'ecs-growth.cpzshl.0001.apse1.cache.amazonaws.com',
 		'REDIS_PORT': 8080,
-		'PWG_LOAD_BALANCER': 'http://internal-ecs-lb-pwg-pvt-555364892.ap-southeast-1.elb.amazonaws.com'
+		'PWG_LOAD_BALANCER': 'http://internal-gamma-lb-pvt-482748674.ap-southeast-1.elb.amazonaws.com'
 	},
 	prod: {
 		'SERVICE_PORT': 80,
