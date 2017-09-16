@@ -911,19 +911,19 @@ function handleAccessTokenExpiry(accessTokenKey) {
         } else {
             const bucketId = fetchedAccessTokenData;
             const hostName = accessTokenKey.split('|')[0];
-            decrementBucketStatistics(hostName, bucketId, function (error) {
-                if (error) {
-                    console.log('-------------ERROR-----------');
-                    console.log(error);
-                    console.log('-------------ERROR-----------');
+            _deleteShadowKey(shadowKeyName, function (shadowKeyDeleteError) {
+                if (shadowKeyDeleteError) {
+                    console.log('-------------SHADOW KEY DELETION ERROR-----------');
+                    console.log(shadowKeyDeleteError);
+                    console.log('-------------SHADOW KEY DELETION ERROR-----------');
                     return;
                 }
-
-                _deleteShadowKey(shadowKeyName, function (shadowKeyDeleteError) {
-                    if (shadowKeyDeleteError) {
-                        console.log('-------------SHADOW KEY DELETION ERROR-----------');
-                        console.log(shadowKeyDeleteError);
-                        console.log('-------------SHADOW KEY DELETION ERROR-----------');
+                decrementBucketStatistics(hostName, bucketId, function (error) {
+                    if (error) {
+                        console.log('-------------ERROR-----------');
+                        console.log(error);
+                        console.log('-------------ERROR-----------');
+                        return;
                     }
                 });
             });
