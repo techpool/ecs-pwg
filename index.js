@@ -13,8 +13,7 @@ const
     lock = new AsyncLock();
 
 const
-    redisUtility = require('./lib/redisUtility'),
-    redisCleaner = require('./lib/redisCleaner');
+    redisUtility = require('./lib/redisUtility');
 
 const
     CONFIG = require('./config/main.js')[process.env.STAGE || 'local'],
@@ -111,6 +110,12 @@ app.get('/delete', function (req, res, next) {
     });
 });
 
+app.get('/keystats', function (req, res, next) {
+    redisUtility.keys('*', function (err, keys) {
+        res.status(200).json(keys);
+    });
+});
+
 app.get('/stats', function (req, res, next) {
     var host = req.get('host');
     redisUtility.hgetall(_getBucketCollectionName(host), function (someError, data) {
@@ -119,6 +124,18 @@ app.get('/stats', function (req, res, next) {
         } else {
             res.status(200).json(data);
         }
+    });
+});
+
+app.get('/details', function (req, res, next) {
+    const access_token = req.query.access_token;
+    const hostName = req.headers.host;
+
+    _getCurrentUserStatus(access_token, hostName, function (error, userDetails) {
+        res.status(200).json({
+            error: error,
+            userDetails: userDetails
+        });
     });
 });
 
@@ -213,8 +230,9 @@ app.get('/*', (req, res, next) => {
                     res.writeHead(response.statusCode, response.headers);
                 }
             ).pipe(res);
-        } else
+        } else {
             next();
+        }
     } else {
         next();
     }
@@ -396,7 +414,8 @@ app.use(function (req, res, next) {
 // Getting the access token for the current user
 app.use((req, res, next) => {
 
-
+    // Assumption -> All static file requests shall have a valid access token
+    // And some static file requests might not be having access token ( from service worker or from css )
     if (req.path.isStaticFileRequest()) {
         next();
     } else {
@@ -430,39 +449,22 @@ app.use((req, res, next) => {
     }
 });
 
-// Serving mini website
+// Middleware - redirection to mini
 app.get('/*', (req, res, next) => {
-
 
     var web = TRAFFIC_CONFIG[req.headers.host];
-    if (web.BASIC_VERSION) {
-        res.locals["redirection"] = 'MINI';
-        next();
-    } else {
-        next();
-    }
-});
-
-// Master website: www.pratilipi.com
-app.get('/*', (req, res, next) => {
-
-
-    var web = TRAFFIC_CONFIG[req.headers.host];
-    if (web.VERSION === "ALL_LANGUAGE" || web.VERSION === "GAMMA_ALL_LANGUAGE") {
-        res.locals["redirection"] = 'MINI';
-        next();
-    } else {
-        next();
-    }
-});
-
-// Other urls where PWA is not supported
-app.get('/*', (req, res, next) => {
-
-
-
     var forwardToMini = false;
-    if (req.path === '/pratilipi-write' ||
+
+    // Serving mini website
+    if (web.BASIC_VERSION) {
+        forwardToMini = true;
+
+        // Master website: www.pratilipi.com
+    } else if (web.VERSION === "ALL_LANGUAGE" || web.VERSION === "GAMMA_ALL_LANGUAGE") {
+        forwardToMini = true;
+
+        // Other urls where PWA is not supported
+    } else if (req.path === '/pratilipi-write' ||
         req.path === '/write' ||
         req.path.startsWith('/admin/') ||
         req.path === '/edit-event' ||
@@ -486,69 +488,63 @@ app.get('/*', (req, res, next) => {
     if (forwardToMini) {
         res.locals["redirection"] = 'MINI';
     }
+
     next();
+
 });
 
 
-// ========================================
-// Traffic splitting logic
-// ========================================
-
-
+// Middleware to serve static files
 app.use(function (req, res, next) {
-    if (res.locals && res.locals["redirection"]) {
-        next();
-        return;
-    }
-
-    if (req.cookies["access_token"]) {
-        next();
-        console.log('-----------------------------------------');
-        console.log('I have a access token and Im going forward');
-        console.log('Path: ', req.path);
-        console.log('-----------------------------------------');
-        return;
-    }
 
     if (!req.path.isStaticFileRequest()) {
         next();
         return;
     }
 
+    if (res.locals && res.locals["redirection"]) { // static files for mini already set
+        next();
+        return;
+    }
+
+    // 1. if 'stack' in referer
+    // 2. access_token != null && access_token in redis
+    // 3. fallback to product
+
+    // 'stack' in referer
     const referer = req.headers['referer'] != null ? req.headers['referer'] : "";
     const url = new URL(referer);
-
-    console.log('----------REFERER-----------');
-    console.log("req.url", req.url);
-    console.log("req.headers['referer']", req.headers['referer']);
-    console.log('----------REFERER-----------');
-
-    const query = queryString.parse(url.query);
-    const forcedStack = query.stack;
-
-    console.log('Query: ', query);
+    const forcedStack = queryString.parse(url.query).stack;
     console.log('Forced Stack: ', forcedStack);
-
-    if (!req.cookies["access_token"] && !forcedStack) {
-        res.locals["redirection"] = "PRODUCT";
+    if (forcedStack && (forcedStack === "GROWTH" || forcedStack === "PRODUCT")) {
+        res.locals["redirection"] = forcedStack;
         next();
-    } else if (!req.cookies["access_token"] && forcedStack) {
-        if (forcedStack === "GROWTH" || forcedStack === "PRODUCT" || forcedStack === "MINI") {
-            res.locals["redirection"] = forcedStack;
-            next();
-        } else {
-            res.locals["redirection"] = "PRODUCT";
-            next();
-        }
-    } else if (req.cookies["access_token"]) {
-        next();
-    } else {
-        next();
+        return;
     }
+
+    // access_token != null && access_token in redis
+    const accessToken = req.cookies["access_token"];
+    if (accessToken) {
+        _isUserInRedis(accessToken, req.headers.host, function (isPresent) {
+            if (isPresent) {
+                next(); // stack will be figured out in the next middleware, just passing it upon
+            } else {
+                res.locals["redirection"] = "PRODUCT"; // fallback to PRODUCT
+                next();
+            }
+        });
+        return;
+    }
+
+    // fallback to PRODUCT
+    res.locals["redirection"] = "PRODUCT";
+    next();
+
 });
 
 // Middleware to do forced loading of any stack on any domain
 app.use(function (req, res, next) {
+
     if (res.locals && res.locals["redirection"]) {
         next();
         return;
@@ -556,47 +552,41 @@ app.use(function (req, res, next) {
 
     let forcedStack = req.query.stack;
 
-    if (forcedStack === "GROWTH") {
-        res.locals["redirection"] = "GROWTH";
-        next();
-    } else if (forcedStack === "PRODUCT") {
-        res.locals["redirection"] = "PRODUCT";
-        next();
-    } else if (forcedStack === "MINI") {
-        res.locals["redirection"] = "MINI";
-        next();
-    } else {
-        next();
-    }
+    if (forcedStack === "GROWTH" || forcedStack === "PRODUCT")
+        res.locals["redirection"] = forcedStack;
+
+    next();
+
 });
 
 // Domains with predefined stack to be redirected to their particular stack
 app.use(function (req, res, next) {
+
     if (res.locals && res.locals["redirection"]) {
         next();
         return;
     }
 
-    // const currentHostName = req.headers.host.match(/:/g) ? req.headers.host.slice(0, req.headers.host.indexOf(":")) : req.headers.host;
-    const currentHostName = req.headers.host;
-    const hostConfig = TRAFFIC_CONFIG[currentHostName];
+    const hostConfig = TRAFFIC_CONFIG[req.headers.host];
 
-    if (!hostConfig) {
-        res.locals["redirection"] = "PRODUCT";
-        next();
-        return;
-    }
+    if (hostConfig.STACK === "GROWTH" || hostConfig.STACK === "PRODUCT")
+        res.locals["redirection"] = hostConfig.STACK;
 
-    if (hostConfig.STACK === "GROWTH") {
-        res.locals["redirection"] = "GROWTH";
-        next();
-    } else if (hostConfig.STACK === "PRODUCT") {
-        res.locals["redirection"] = "PRODUCT";
-        next();
-    } else {
-        next();
-    }
+    next();
+
 });
+
+
+// ========================================
+// Traffic splitting logic
+// ========================================
+
+function _isUserInRedis(accessToken, hostName, callback) {
+    const redisKey = _getAccessTokenKeyName(hostName, accessToken);
+    redisUtility.get(redisKey, function (error, bucketId) {
+        callback(!error && bucketId != null);
+    });
+}
 
 function _getCurrentUserStatus(accessToken, hostName, callback) {
     const redisKey = _getAccessTokenKeyName(hostName, accessToken);
@@ -611,7 +601,7 @@ function _getCurrentUserStatus(accessToken, hostName, callback) {
             return;
         }
 
-        callback(null, bucketId);
+        callback(null, Number(bucketId));
     });
 }
 
@@ -640,7 +630,7 @@ function _incrementBucketStatisticsValue(hostName, bucketIndex, updatedBucketVal
 function _updateExpiryOfAccessToken(accessToken, hostName, callback) {
     const userKeyInRedis = _getAccessTokenKeyName(hostName, accessToken);
     const ttlInDays = TRAFFIC_CONFIG[hostName].TTL || 1;
-    const ttlInSeconds = ttlInDays * 24 * 60 * 60;
+	const ttlInSeconds = ttlInDays * 24 * 60 * 60;
     redisUtility.expire(userKeyInRedis, ttlInSeconds, callback);
 }
 
@@ -659,85 +649,35 @@ function _associateUserWithABucket(accessToken, hostName, bucketId, callback) {
             });
         },
 
+        // _addShadowKeyForUser
         function (bucketId, waterfallCallback) {
-            _addShadowKeyForUser(userKeyInRedis, bucketId, waterfallCallback);
+            redisUtility.set(_getShadowKeyName(userKeyInRedis), bucketId, waterfallCallback);
         }
     ], callback);
 }
 
-function _addShadowKeyForUser(originalKeyName, bucketId, callback) {
-    const shadowKeyName = _getShadowKeyName(originalKeyName);
-    redisUtility.set(shadowKeyName, bucketId, callback);
-}
-
-function _redirectToGrowth(req, res) {
-    request.get({
-        uri: CONFIG.PWG_LOAD_BALANCER + ':8080' + req.path,
-        method: req.method,
-        qs: req.query,
-        headers: req.headers,
-        followAllRedirects: false,
-        followRedirect: false,
-        jar: true
-    }).on('response',
-        function (response) {
-            res.writeHead(response.statusCode, response.headers);
-        }
-    ).pipe(res);
-}
-
-function _redirectToProduct(req, res) {
-    request.get({
-        uri: CONFIG.PWG_LOAD_BALANCER + req.path,
-        method: req.method,
-        qs: req.query,
-        headers: req.headers,
-        followAllRedirects: false,
-        followRedirect: false,
-        jar: true
-    }).on('response',
-        function (response) {
-            res.writeHead(response.statusCode, response.headers);
-        }
-    ).pipe(res);
-}
-
-function _redirectToMini(req, res) {
-    request.get({
-        uri: CONFIG.PWG_LOAD_BALANCER + ':81' + req.path,
-        method: req.method,
-        qs: req.query,
-        headers: req.headers,
-        followAllRedirects: false,
-        followRedirect: false,
-        jar: true
-    }).on('response',
-        function (response) {
-            res.writeHead(response.statusCode, response.headers);
-        }
-    ).pipe(res);
-}
-
+// hacky middleware to check for files requested by service workers
+app.use(function (req, res, next) {
+    const referer = req.header('Referer') != null ? req.header('Referer') : "";
+    const url = new URL(referer);
+    console.log('Parsed URL: ', JSON.stringify(url));
+    if (url && url.pathname.startsWith('/pwa-sw-') && url.pathname.endsWith('.js')) {
+        console.log('Referer for redirection: ', referer);
+        res.locals["redirection"] = "PRODUCT";
+    }
+    next();
+});
 
 // Redirection of users who has been previously served a version
 app.use(function (req, res, next) {
 
-    if (
-        res.locals["redirection"] &&
-        (
-            res.locals["redirection"] === "GROWTH" ||
-            res.locals["redirection"] === "PRODUCT" ||
-            res.locals["redirection"] === "MINI")
-    ) {
+    if (res.locals && res.locals["redirection"]) {
         next();
         return;
     }
 
-
     const currentAccessToken = res.locals["access-token"] || req.cookies["access_token"];
     const hostName = req.headers.host;
-
-
 
     async.waterfall([
         function (waterfallCallback) {
@@ -745,7 +685,7 @@ app.use(function (req, res, next) {
                 console.log('----------ACCESS TOKEN DETAILS-------------');
                 console.log('Access Token: ', currentAccessToken);
                 console.log('Bucket ID: ', fetchedBucketId);
-                console.log('Any ERROR: ', userDetailsParseError);
+                console.log('Any ERROR: ', JSON.stringify(userDetailsParseError));
                 console.log('----------ACCESS TOKEN DETAILS-------------');
                 waterfallCallback(userDetailsParseError, fetchedBucketId);
             });
@@ -758,50 +698,33 @@ app.use(function (req, res, next) {
         },
 
         function (fetchedBucketId, waterfallCallback) {
-            const bucketId = Number(fetchedBucketId) + 1;
             const trafficDetails = TRAFFIC_CONFIG[hostName];
-            console.log('---------TRAFFIC DETAILS----------');
-            console.log(trafficDetails);
-            console.log('GROWTH Percentage: ', trafficDetails.GROWTH_PERCENTAGE);
-            console.log('Bucket ID: ', fetchedBucketId);
-            console.log('Type of bucket id: ', typeof fetchedBucketId);
-            console.log('Condition: ', trafficDetails.GROWTH_PERCENTAGE >= bucketId);
-            console.log('---------TRAFFIC DETAILS----------');
-            if (trafficDetails.GROWTH_PERCENTAGE && trafficDetails.GROWTH_PERCENTAGE >= bucketId) {
+            console.log('674:fetchedBucketId: ', fetchedBucketId);
+            if (trafficDetails.GROWTH_PERCENTAGE && trafficDetails.GROWTH_PERCENTAGE > fetchedBucketId) {
                 waterfallCallback(null, 'REDIRECT_TO_GROWTH');
             } else {
                 waterfallCallback(null, 'REDIRECT_TO_PRODUCT');
             }
         },
 
-
     ], function (error, redirectLocation) {
         if (error) {
             console.log('------------ERROR SOMEWHERE------------');
-            console.log(error);
+            console.log(JSON.stringify(error));
             console.log('------------ERROR SOMEWHERE------------');
-
-            next();
         } else if (redirectLocation === 'REDIRECT_TO_GROWTH') {
             res.locals["redirection"] = "GROWTH";
-            next();
         } else {
             res.locals["redirection"] = "PRODUCT";
-            next();
         }
+        next();
     });
 });
 
 // Middleware to handle new users whose access token has not been saved in redis
 app.use(function (req, res, next) {
 
-    if (
-        res.locals["redirection"] &&
-        (res.locals["redirection"] === "GROWTH" ||
-            res.locals["redirection"] === "PRODUCT" ||
-            res.locals["redirection"] === "MINI"
-        )
-    ) {
+    if (res.locals && res.locals["redirection"]) {
         next();
         return;
     }
@@ -809,29 +732,30 @@ app.use(function (req, res, next) {
     const currentAccessToken = res.locals["access-token"] || req.cookies["access_token"];
     const hostName = req.headers.host;
 
-
-
     lock.acquire(_getBucketCollectionName(hostName), function (done) {
-        async.waterfall([
 
+        async.waterfall([
             function (waterfallCallback) {
                 _getBucketStatistics(hostName, function (bucketDetailsFetchError, fetchedBucketDetails) {
-                    if (bucketDetailsFetchError || !fetchedBucketDetails) {
+                    if (bucketDetailsFetchError) {
                         waterfallCallback(bucketDetailsFetchError || 'No bucket has been setup for this domain');
                     } else {
-
                         waterfallCallback(null, fetchedBucketDetails);
                     }
                 });
             },
 
             function (fetchedBucketDetailsObj, waterfallCallback) {
-                var fetchedBucketDetails = Object.keys(fetchedBucketDetailsObj).map(function (key) { return fetchedBucketDetailsObj[key]; });
+                var fetchedBucketDetails = Object.keys(fetchedBucketDetailsObj).map(function (key) { return Number(fetchedBucketDetailsObj[key]); });
+
+                console.log("fetchedBucketDetails", JSON.stringify(fetchedBucketDetails));
+                console.log("typeof(fetchedBucketDetails[0])", typeof (fetchedBucketDetails[0]));
+
                 const valueOfBucketWithMinimumUsers = Math.min.apply(null, fetchedBucketDetails);
 
 
                 const updatedValueOfBucket = valueOfBucketWithMinimumUsers + 1;
-                const indexOfBucketWithMinimumUsers = fetchedBucketDetails.indexOf(String(valueOfBucketWithMinimumUsers));
+                const indexOfBucketWithMinimumUsers = fetchedBucketDetails.indexOf(valueOfBucketWithMinimumUsers);
 
 
                 console.log('-------------BUCKET BEFORE WRITING------------');
@@ -909,3 +833,118 @@ app.listen(CONFIG.SERVICE_PORT, function (error) {
         return;
     }
 });
+
+function __redirect(req, res, port) {
+    request.get({
+        uri: CONFIG.PWG_LOAD_BALANCER + ':' + port + req.path,
+        method: req.method,
+        qs: req.query,
+        headers: req.headers,
+        followAllRedirects: false,
+        followRedirect: false,
+        jar: true
+    }).on('response',
+        function (response) {
+            res.writeHead(response.statusCode, response.headers);
+        }
+    ).pipe(res);
+}
+
+function _redirectToGrowth(req, res) {
+    __redirect(req, res, 8080);
+}
+
+function _redirectToProduct(req, res) {
+    __redirect(req, res, 80);
+}
+
+function _redirectToMini(req, res) {
+    __redirect(req, res, 81);
+}
+
+
+
+
+
+function decrementBucketStatistics(hostName, bucketId, callback) {
+    const bucketName = _getBucketCollectionName(hostName);
+    lock.acquire(_getBucketCollectionName(hostName), function (done) {
+        async.waterfall([
+            function (waterfallCallback) {
+                redisUtility.hget(bucketName, bucketId, function (err, currentUserInBucket) {
+                    waterfallCallback(err, currentUserInBucket);
+                });
+            },
+
+            function (currentUserInBucket, waterfallCallback) {
+                const finalUsersInBucket = currentUserInBucket - 1;
+                console.log('------CURRENT USERS-------');
+                console.log(currentUserInBucket);
+                console.log('------CURRENT USERS-------');
+                console.log('------FINAL USERS-------');
+                console.log(finalUsersInBucket);
+                console.log('------FINAL USERS-------');
+                console.log('------BUCKET ID-------');
+                console.log(bucketId);
+                console.log('------BUCKET ID-------');
+                redisUtility.hset(bucketName, bucketId, finalUsersInBucket, waterfallCallback);
+            }
+        ], done);
+    }, callback);
+}
+
+function _deleteShadowKey(keyName, callback) {
+    redisUtility.del(keyName, callback);
+}
+
+function handleAccessTokenExpiry(accessTokenKey) {
+    const shadowKeyName = _getShadowKeyName(accessTokenKey);
+    redisUtility.get(shadowKeyName, function (redisDataFetchError, fetchedAccessTokenData) {
+        if (redisDataFetchError) {
+            console.log('--------------ERROR WHILE FETCHING DATA FROM REDIS---------------');
+            console.log(redisDataFetchError);
+            console.log('--------------ERROR WHILE FETCHING DATA FROM REDIS---------------');
+        } else if (!fetchedAccessTokenData) {
+            console.log('--------------NO SHADOW KEY FOUND----------------');
+            console.log(accessTokenKey);
+            console.log('--------------NO SHADOW KEY FOUND----------------');
+        } else {
+            const bucketId = fetchedAccessTokenData;
+            const hostName = accessTokenKey.split('|')[0];
+            decrementBucketStatistics(hostName, bucketId, function (error) {
+                if (error) {
+                    console.log('-------------ERROR-----------');
+                    console.log(error);
+                    console.log('-------------ERROR-----------');
+                    return;
+                }
+
+                _deleteShadowKey(shadowKeyName, function (shadowKeyDeleteError) {
+                    if (shadowKeyDeleteError) {
+                        console.log('-------------SHADOW KEY DELETION ERROR-----------');
+                        console.log(shadowKeyDeleteError);
+                        console.log('-------------SHADOW KEY DELETION ERROR-----------');
+                    }
+                });
+            });
+        }
+    });
+}
+
+redisUtility.pubsubConnection.psubscribe('*');
+
+redisUtility.pubsubConnection.on('pmessage', function (pattern, channel, message) {
+    if (channel === '__keyevent@0__:expired') {
+        console.log('--------EXPIRY EVENT--------');
+        console.log(pattern);
+        console.log(channel);
+        console.log(message);
+        console.log('--------EXPIRY EVENT--------');
+        handleAccessTokenExpiry(message);
+    }
+});
+
+redisUtility.pubsubConnection.on('psubscribe', function () {
+    console.log('Redis pubsub has subscribed successfully');
+});
+
