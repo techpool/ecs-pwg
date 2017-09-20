@@ -490,8 +490,9 @@ app.use(function (req, res, next) {
     }
 
     // 1. if 'stack' in referer
-    // 2. access_token != null && access_token in redis
-    // 3. fallback to product
+    // 2. if 'stack' in config
+    // 3. access_token != null && access_token in redis
+    // 4. fallback to product
 
     // 'stack' in referer
     const referer = req.headers['referer'] != null ? req.headers['referer'] : "";
@@ -500,6 +501,14 @@ app.use(function (req, res, next) {
     console.log('Forced Stack: ', forcedStack);
     if (forcedStack && (forcedStack === "GROWTH" || forcedStack === "PRODUCT")) {
         res.locals["redirection"] = forcedStack;
+        next();
+        return;
+    }
+
+    // 'stack' in config
+    const hostConfig = TRAFFIC_CONFIG[req.headers.host];
+    if (hostConfig.STACK === "GROWTH" || hostConfig.STACK === "PRODUCT") {
+        res.locals["redirection"] = hostConfig.STACK;
         next();
         return;
     }
