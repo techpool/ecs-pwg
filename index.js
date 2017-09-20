@@ -141,7 +141,7 @@ app.use((req, res, next) => {
     var host = req.get('host');
     var redirected = false;
 
-    if (TRAFFIC_CONFIG[host.substring("www.".length)]) {
+    if (host.startsWith("www.") && TRAFFIC_CONFIG[host.substring("www.".length)]) {
         return res.redirect(301, (req.secure ? 'https://' : 'http://') + host.substring("www.".length) + req.originalUrl);
     } else {
         next();
