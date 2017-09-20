@@ -161,8 +161,8 @@ module.exports = {
     },
     "hindi-gamma.pratilipi.com":
     {
-        "STACK": "PRODUCT",
         "BASIC_DOMAIN": "hi-gamma.pratilipi.com",
+        "GROWTH_PERCENTAGE": 10,
         "BASIC_VERSION": false,
         "TTL": 14,
         "VERSION": "GAMMA_HINDI"
