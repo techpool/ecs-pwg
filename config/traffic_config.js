@@ -193,9 +193,9 @@ module.exports = {
     },
     "tamil-gamma.pratilipi.com":
     {
-        "STACK": "PRODUCT",
         "BASIC_DOMAIN": "ta-gamma.pratilipi.com",
         "BASIC_VERSION": false,
+        "GROWTH_PERCENTAGE": 0,
         "TTL": 14,
         "VERSION": "GAMMA_TAMIL"
     },
