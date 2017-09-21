@@ -162,7 +162,7 @@ module.exports = {
     "hindi-gamma.pratilipi.com":
     {
         "BASIC_DOMAIN": "hi-gamma.pratilipi.com",
-        "GROWTH_PERCENTAGE": 10,
+        "GROWTH_PERCENTAGE": 100,
         "BASIC_VERSION": false,
         "TTL": 14,
         "VERSION": "GAMMA_HINDI"
