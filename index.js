@@ -269,6 +269,8 @@ app.get('/*', (req, res, next) => {
         }
 
         if (isCrawler) {
+            // TODO: Remove hack for crawlers
+            req.headers[ "Access-Token" ] = "5deb8b92-f406-4a5c-ad8b-db2417461b70";
             _redirectToMini(req, res);
         } else {
             next();
