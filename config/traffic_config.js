@@ -19,7 +19,7 @@ module.exports = {
     {
         "BASIC_DOMAIN": "hi.pratilipi.com",
         "BASIC_VERSION": false,
-        "GROWTH_PERCENTAGE": 1,
+        "GROWTH_PERCENTAGE": 10,
         "TTL": 14,
         "VERSION": "HINDI"
     },
@@ -35,7 +35,7 @@ module.exports = {
     {
         "BASIC_DOMAIN": "gu.pratilipi.com",
         "BASIC_VERSION": false,
-        "GROWTH_PERCENTAGE": 1,
+        "GROWTH_PERCENTAGE": 10,
         "TTL": 14,
         "VERSION": "GUJARATI"
     },
@@ -51,7 +51,7 @@ module.exports = {
     {
         "BASIC_DOMAIN": "ta.pratilipi.com",
         "BASIC_VERSION": false,
-        "GROWTH_PERCENTAGE": 1,
+        "GROWTH_PERCENTAGE": 10,
         "TTL": 14,
         "VERSION": "TAMIL"
     },
@@ -67,7 +67,7 @@ module.exports = {
     {
         "BASIC_DOMAIN": "mr.pratilipi.com",
         "BASIC_VERSION": false,
-        "GROWTH_PERCENTAGE": 1,
+        "GROWTH_PERCENTAGE": 10,
         "TTL": 14,
         "VERSION": "MARATHI"
     },
@@ -83,7 +83,7 @@ module.exports = {
     {
         "BASIC_DOMAIN": "ml.pratilipi.com",
         "BASIC_VERSION": false,
-        "GROWTH_PERCENTAGE": 1,
+        "GROWTH_PERCENTAGE": 10,
         "TTL": 14,
         "VERSION": "MALAYALAM"
     },
@@ -99,7 +99,7 @@ module.exports = {
     {
         "BASIC_DOMAIN": "bn.pratilipi.com",
         "BASIC_VERSION": false,
-        "GROWTH_PERCENTAGE": 1,
+        "GROWTH_PERCENTAGE": 10,
         "TTL": 14,
         "VERSION": "BENGALI"
     },
@@ -115,7 +115,7 @@ module.exports = {
     {
         "BASIC_DOMAIN": "kn.pratilipi.com",
         "BASIC_VERSION": false,
-        "GROWTH_PERCENTAGE": 1,
+        "GROWTH_PERCENTAGE": 10,
         "TTL": 14,
         "VERSION": "KANNADA"
     },
@@ -131,7 +131,7 @@ module.exports = {
     {
         "BASIC_DOMAIN": "te.pratilipi.com",
         "BASIC_VERSION": false,
-        "GROWTH_PERCENTAGE": 1,
+        "GROWTH_PERCENTAGE": 10,
         "TTL": 14,
         "VERSION": "TELUGU"
     },
