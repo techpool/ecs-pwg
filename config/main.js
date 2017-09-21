@@ -5,7 +5,7 @@ module.exports = {
 		'REDIS_HOST': 'localhost',
 		'REDIS_PORT': 6379,
 		'REDIS_DB': 0,
-		'PWG_LOAD_BALANCER': 'http://internal-ecs-lb-pwg-pvt-555364892.ap-southeast-1.elb.amazonaws.com'
+		'PWG_LOAD_BALANCER': 'http://localhost:8080'
 	},
 	devo: {
 		'SERVICE_PORT': 80,
@@ -20,7 +20,7 @@ module.exports = {
 		'REDIS_NOTIFY_EVENTS': 'Ex',
 		'REDIS_HOST': 'prod-ecs.cpzshl.ng.0001.apse1.cache.amazonaws.com',
 		'REDIS_PORT': 8080,
-		'REDIS_DB': 0,
+		'REDIS_DB': 10,
 		'PWG_LOAD_BALANCER': process.env.API_END_POINT
 	},
 	prod: {
@@ -28,7 +28,7 @@ module.exports = {
 		'REDIS_NOTIFY_EVENTS': 'Ex',
 		'REDIS_HOST': 'prod-ecs.cpzshl.ng.0001.apse1.cache.amazonaws.com',
 		'REDIS_PORT': 8080,
-		'REDIS_DB': 0,
+		'REDIS_DB': 10,
 		'PWG_LOAD_BALANCER': process.env.API_END_POINT
 	}
 }
