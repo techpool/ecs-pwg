@@ -4,27 +4,31 @@ module.exports = {
 		'REDIS_NOTIFY_EVENTS': 'Ex',
 		'REDIS_HOST': 'localhost',
 		'REDIS_PORT': 6379,
-		'PWG_LOAD_BALANCER': 'http://internal-ecs-lb-pwg-pvt-555364892.ap-southeast-1.elb.amazonaws.com'
+		'REDIS_DB': 0,
+		'PWG_LOAD_BALANCER': 'http://localhost:8080'
 	},
 	devo: {
 		'SERVICE_PORT': 80,
 		'REDIS_NOTIFY_EVENTS': 'Ex',
 		'REDIS_HOST': 'growth-ecs.e6ocw5.0001.apse1.cache.amazonaws.com',
 		'REDIS_PORT': 8080,
-		'PWG_LOAD_BALANCER': 'http://internal-ecs-lb-pwg-pvt-555364892.ap-southeast-1.elb.amazonaws.com'
+		'REDIS_DB': 0,
+		'PWG_LOAD_BALANCER': process.env.API_END_POINT
 	},
 	gamma: {
 		'SERVICE_PORT': 80,
 		'REDIS_NOTIFY_EVENTS': 'Ex',
-		'REDIS_HOST': 'ecs-growth.cpzshl.0001.apse1.cache.amazonaws.com',
+		'REDIS_HOST': 'prod-ecs.cpzshl.ng.0001.apse1.cache.amazonaws.com',
 		'REDIS_PORT': 8080,
-		'PWG_LOAD_BALANCER': 'http://internal-ecs-lb-pwg-pvt-555364892.ap-southeast-1.elb.amazonaws.com'
+		'REDIS_DB': 10,
+		'PWG_LOAD_BALANCER': process.env.API_END_POINT
 	},
 	prod: {
 		'SERVICE_PORT': 80,
 		'REDIS_NOTIFY_EVENTS': 'Ex',
-		'REDIS_HOST': 'ecs-growth.cpzshl.0001.apse1.cache.amazonaws.com',
+		'REDIS_HOST': 'prod-ecs.cpzshl.ng.0001.apse1.cache.amazonaws.com',
 		'REDIS_PORT': 8080,
-		'PWG_LOAD_BALANCER': 'http://internal-ecs-lb-pwg-pvt-555364892.ap-southeast-1.elb.amazonaws.com'
+		'REDIS_DB': 10,
+		'PWG_LOAD_BALANCER': process.env.API_END_POINT
 	}
 }

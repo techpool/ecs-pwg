@@ -60,31 +60,6 @@ function _getShadowKeyName(originalKeyName) {
     return originalKeyName + '|shadow';
 };
 
-function _initializeBuckets() {
-    for (const hostName in TRAFFIC_CONFIG) {
-        _getBucketStatistics(hostName, function (error, bucketStatistics) {
-            if (error) {
-
-                const bucketName = _getBucketCollectionName(hostName);
-                const bucketObject = {};
-                for (var i = 0; i < 100; i++) {
-                    bucketObject[i] = 0;
-                }
-
-
-
-                redisUtility.hmset(bucketName, bucketObject, function (error) {
-                    if (error) {
-                        console.log(error);
-                    }
-                });
-            }
-        });
-    }
-}
-
-_initializeBuckets();
-
 app.use(morgan("short"));
 app.use(cookieParser());
 
@@ -102,10 +77,18 @@ app.get('/delete', function (req, res, next) {
             });
             return;
         }
-
-        _initializeBuckets();
         res.status(200).json({
             success: true
+        });
+    });
+});
+
+app.get('/bucket/:bucketId', function (req, res, next) {
+    const bucketId = req.params.bucketId;
+    redisUtility.smembers(bucketId, function (error, data) {
+        res.status(200).json({
+            error: error,
+            data: data
         });
     });
 });
@@ -118,12 +101,11 @@ app.get('/keystats', function (req, res, next) {
 
 app.get('/stats', function (req, res, next) {
     var host = req.get('host');
-    redisUtility.hgetall(_getBucketCollectionName(host), function (someError, data) {
-        if (someError) {
-            res.status(500).json(someError);
-        } else {
-            res.status(200).json(data);
-        }
+    _getBucketStatistics(host, function (error, currentBucketStatistics) {
+        res.status(200).json({
+            error: error,
+            bucketStats: currentBucketStatistics
+        });
     });
 });
 
@@ -159,7 +141,7 @@ app.use((req, res, next) => {
     var host = req.get('host');
     var redirected = false;
 
-    if (TRAFFIC_CONFIG[host.substring("www.".length)]) {
+    if (host.startsWith("www.") && TRAFFIC_CONFIG[host.substring("www.".length)]) {
         return res.redirect(301, (req.secure ? 'https://' : 'http://') + host.substring("www.".length) + req.originalUrl);
     } else {
         next();
@@ -508,8 +490,9 @@ app.use(function (req, res, next) {
     }
 
     // 1. if 'stack' in referer
-    // 2. access_token != null && access_token in redis
-    // 3. fallback to product
+    // 2. if 'stack' in config
+    // 3. access_token != null && access_token in redis
+    // 4. fallback to product
 
     // 'stack' in referer
     const referer = req.headers['referer'] != null ? req.headers['referer'] : "";
@@ -518,6 +501,14 @@ app.use(function (req, res, next) {
     console.log('Forced Stack: ', forcedStack);
     if (forcedStack && (forcedStack === "GROWTH" || forcedStack === "PRODUCT")) {
         res.locals["redirection"] = forcedStack;
+        next();
+        return;
+    }
+
+    // 'stack' in config
+    const hostConfig = TRAFFIC_CONFIG[req.headers.host];
+    if (hostConfig.STACK === "GROWTH" || hostConfig.STACK === "PRODUCT") {
+        res.locals["redirection"] = hostConfig.STACK;
         next();
         return;
     }
@@ -606,31 +597,30 @@ function _getCurrentUserStatus(accessToken, hostName, callback) {
 }
 
 function _getBucketStatistics(hostName, callback) {
+
     const redisKey = _getBucketCollectionName(hostName);
-    redisUtility.hgetall(redisKey, function (error, bucketDetails) {
-        if (error) {
-            callback(error);
-            return;
-        }
-
-        if (!bucketDetails) {
-            callback(1);
-            return;
-        }
-
-        callback(null, bucketDetails);
+    const arrayOf100Elements = new Array(100);
+    const objectWithCount = {};
+    async.eachOf(arrayOf100Elements, function (eachElement, bucketId, iterateNext) {
+        redisUtility.scard(redisKey + '_' + bucketId, function (error, countOfUsers) {
+            objectWithCount[bucketId] = countOfUsers || 0;
+            iterateNext();
+        });
+    }, function (error) {
+        callback(error, objectWithCount);
     });
+
 }
 
-function _incrementBucketStatisticsValue(hostName, bucketIndex, updatedBucketValue, callback) {
+function _incrementBucketStatisticsValue(hostName, bucketIndex, accessToken, callback) {
     const bucketName = _getBucketCollectionName(hostName);
-    redisUtility.hset(bucketName, bucketIndex, updatedBucketValue, callback);
+    redisUtility.sadd(bucketName + '_' + bucketIndex, accessToken, callback);
 }
 
 function _updateExpiryOfAccessToken(accessToken, hostName, callback) {
     const userKeyInRedis = _getAccessTokenKeyName(hostName, accessToken);
     const ttlInDays = TRAFFIC_CONFIG[hostName].TTL || 1;
-	const ttlInSeconds = ttlInDays * 24 * 60 * 60;
+    const ttlInSeconds = ttlInDays * 24 * 60 * 60;
     redisUtility.expire(userKeyInRedis, ttlInSeconds, callback);
 }
 
@@ -732,73 +722,67 @@ app.use(function (req, res, next) {
     const currentAccessToken = res.locals["access-token"] || req.cookies["access_token"];
     const hostName = req.headers.host;
 
-    lock.acquire(_getBucketCollectionName(hostName), function (done) {
-
-        async.waterfall([
-            function (waterfallCallback) {
-                _getBucketStatistics(hostName, function (bucketDetailsFetchError, fetchedBucketDetails) {
-                    if (bucketDetailsFetchError) {
-                        waterfallCallback(bucketDetailsFetchError || 'No bucket has been setup for this domain');
-                    } else {
-                        waterfallCallback(null, fetchedBucketDetails);
-                    }
-                });
-            },
-
-            function (fetchedBucketDetailsObj, waterfallCallback) {
-                var fetchedBucketDetails = Object.keys(fetchedBucketDetailsObj).map(function (key) { return Number(fetchedBucketDetailsObj[key]); });
-
-                console.log("fetchedBucketDetails", JSON.stringify(fetchedBucketDetails));
-                console.log("typeof(fetchedBucketDetails[0])", typeof (fetchedBucketDetails[0]));
-
-                const valueOfBucketWithMinimumUsers = Math.min.apply(null, fetchedBucketDetails);
-
-
-                const updatedValueOfBucket = valueOfBucketWithMinimumUsers + 1;
-                const indexOfBucketWithMinimumUsers = fetchedBucketDetails.indexOf(valueOfBucketWithMinimumUsers);
-
-
-                console.log('-------------BUCKET BEFORE WRITING------------');
-                console.log("Bucket ID: ", indexOfBucketWithMinimumUsers);
-                console.log("Bucket Value: ", updatedValueOfBucket);
-                console.log("Path: ", req.path);
-                console.log("Cookies: ", req.cookies["access_token"]);
-                console.log('-------------BUCKET BEFORE WRITING------------');
-
-                _incrementBucketStatisticsValue(hostName, indexOfBucketWithMinimumUsers, updatedValueOfBucket, function (bucketStatisticsUpdateError) {
-                    if (bucketStatisticsUpdateError) {
-                        waterfallCallback(bucketStatisticsUpdateError);
-                    } else {
-                        waterfallCallback(null, indexOfBucketWithMinimumUsers);
-                    }
-                });
-            },
-
-            function (indexOfBucketWithMinimumUsers, waterfallCallback) {
-                _associateUserWithABucket(currentAccessToken, hostName, indexOfBucketWithMinimumUsers, function (userAssociationError) {
-                    if (userAssociationError) {
-                        waterfallCallback(userAssociationError);
-                    } else {
-                        waterfallCallback(null, indexOfBucketWithMinimumUsers);
-                    }
-                });
-            },
-
-            function (indexOfBucketWithMinimumUsers, waterfallCallback) {
-                const bucketId = indexOfBucketWithMinimumUsers + 1;
-                const trafficDetails = TRAFFIC_CONFIG[hostName];
-                if (trafficDetails.GROWTH_PERCENTAGE && trafficDetails.GROWTH_PERCENTAGE >= bucketId) {
-                    waterfallCallback(null, 'REDIRECT_TO_GROWTH');
+    async.waterfall([
+        function (waterfallCallback) {
+            _getBucketStatistics(hostName, function (bucketDetailsFetchError, fetchedBucketDetails) {
+                if (bucketDetailsFetchError) {
+                    waterfallCallback(bucketDetailsFetchError || 'No bucket has been setup for this domain');
                 } else {
-                    waterfallCallback(null, 'REDIRECT_TO_PRODUCT');
+                    waterfallCallback(null, fetchedBucketDetails);
                 }
-            }
-        ], function (error, redirectLocation) {
-            done(error, redirectLocation);
-        });
+            });
+        },
 
-    }, function (err, redirectLocation) {
-        if (err) {
+        function (fetchedBucketDetailsObj, waterfallCallback) {
+            var fetchedBucketDetails = Object.keys(fetchedBucketDetailsObj).map(function (key) { return Number(fetchedBucketDetailsObj[key]); });
+
+            console.log("fetchedBucketDetails", JSON.stringify(fetchedBucketDetails));
+            console.log("typeof(fetchedBucketDetails[0])", typeof (fetchedBucketDetails[0]));
+
+            const valueOfBucketWithMinimumUsers = Math.min.apply(null, fetchedBucketDetails);
+
+
+            const updatedValueOfBucket = valueOfBucketWithMinimumUsers + 1;
+            const indexOfBucketWithMinimumUsers = fetchedBucketDetails.indexOf(valueOfBucketWithMinimumUsers);
+
+
+            console.log('-------------BUCKET BEFORE WRITING------------');
+            console.log("Bucket ID: ", indexOfBucketWithMinimumUsers);
+            console.log("Bucket Value: ", updatedValueOfBucket);
+            console.log("Path: ", req.path);
+            console.log("Cookies: ", req.cookies["access_token"]);
+            console.log('-------------BUCKET BEFORE WRITING------------');
+
+            _incrementBucketStatisticsValue(hostName, indexOfBucketWithMinimumUsers, currentAccessToken, function (bucketStatisticsUpdateError) {
+                if (bucketStatisticsUpdateError) {
+                    waterfallCallback(bucketStatisticsUpdateError);
+                } else {
+                    waterfallCallback(null, indexOfBucketWithMinimumUsers);
+                }
+            });
+        },
+
+        function (indexOfBucketWithMinimumUsers, waterfallCallback) {
+            _associateUserWithABucket(currentAccessToken, hostName, indexOfBucketWithMinimumUsers, function (userAssociationError) {
+                if (userAssociationError) {
+                    waterfallCallback(userAssociationError);
+                } else {
+                    waterfallCallback(null, indexOfBucketWithMinimumUsers);
+                }
+            });
+        },
+
+        function (indexOfBucketWithMinimumUsers, waterfallCallback) {
+            const bucketId = indexOfBucketWithMinimumUsers + 1;
+            const trafficDetails = TRAFFIC_CONFIG[hostName];
+            if (trafficDetails.GROWTH_PERCENTAGE && trafficDetails.GROWTH_PERCENTAGE >= bucketId) {
+                waterfallCallback(null, 'REDIRECT_TO_GROWTH');
+            } else {
+                waterfallCallback(null, 'REDIRECT_TO_PRODUCT');
+            }
+        }
+    ], function (error, redirectLocation) {
+        if (error) {
             res.locals["redirection"] = "PRODUCT";
             next();
         } else if (redirectLocation === 'REDIRECT_TO_GROWTH') {
@@ -851,11 +835,11 @@ function __redirect(req, res, port) {
 }
 
 function _redirectToGrowth(req, res) {
-    __redirect(req, res, 8080);
+    __redirect(req, res, 8081);
 }
 
 function _redirectToProduct(req, res) {
-    __redirect(req, res, 80);
+    __redirect(req, res, 8080);
 }
 
 function _redirectToMini(req, res) {
@@ -866,31 +850,9 @@ function _redirectToMini(req, res) {
 
 
 
-function decrementBucketStatistics(hostName, bucketId, callback) {
+function _decrementBucketStatistics(hostName, bucketId, accessToken, callback) {
     const bucketName = _getBucketCollectionName(hostName);
-    lock.acquire(_getBucketCollectionName(hostName), function (done) {
-        async.waterfall([
-            function (waterfallCallback) {
-                redisUtility.hget(bucketName, bucketId, function (err, currentUserInBucket) {
-                    waterfallCallback(err, currentUserInBucket);
-                });
-            },
-
-            function (currentUserInBucket, waterfallCallback) {
-                const finalUsersInBucket = currentUserInBucket - 1;
-                console.log('------CURRENT USERS-------');
-                console.log(currentUserInBucket);
-                console.log('------CURRENT USERS-------');
-                console.log('------FINAL USERS-------');
-                console.log(finalUsersInBucket);
-                console.log('------FINAL USERS-------');
-                console.log('------BUCKET ID-------');
-                console.log(bucketId);
-                console.log('------BUCKET ID-------');
-                redisUtility.hset(bucketName, bucketId, finalUsersInBucket, waterfallCallback);
-            }
-        ], done);
-    }, callback);
+    redisUtility.srem(bucketName + '_' + bucketId, accessToken, callback);
 }
 
 function _deleteShadowKey(keyName, callback) {
@@ -911,11 +873,12 @@ function handleAccessTokenExpiry(accessTokenKey) {
         } else {
             const bucketId = fetchedAccessTokenData;
             const hostName = accessTokenKey.split('|')[0];
-            _deleteShadowKey(shadowKeyName, function (shadowKeyDeleteError) {
-                if (shadowKeyDeleteError) {
-                    console.log('-------------SHADOW KEY DELETION ERROR-----------');
-                    console.log(shadowKeyDeleteError);
-                    console.log('-------------SHADOW KEY DELETION ERROR-----------');
+
+            _decrementBucketStatistics(hostName, bucketId, accessTokenKey.split('|')[1], function (error) {
+                if (error) {
+                    console.log('-------------ERROR-----------');
+                    console.log(error);
+                    console.log('-------------ERROR-----------');
                     return;
                 }
                 decrementBucketStatistics(hostName, bucketId, function (error) {
@@ -947,4 +910,3 @@ redisUtility.pubsubConnection.on('pmessage', function (pattern, channel, message
 redisUtility.pubsubConnection.on('psubscribe', function () {
     console.log('Redis pubsub has subscribed successfully');
 });
-
