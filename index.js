@@ -404,7 +404,7 @@ app.use((req, res, next) => {
         next();
     } else {
         var accessToken = req.cookies["access_token"];
-        var url = APPENGINE_ENDPOINT + "/ecs/accesstoken";
+        var url = APPENGINE_ENDPOINT + "/user/accesstoken";
         if (accessToken) url += "?accessToken=" + accessToken;
         request(url, (error, response, body) => {
             if (error) {
