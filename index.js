@@ -19,22 +19,6 @@ const
     CONFIG = require('./config/main.js')[process.env.STAGE || 'local'],
     TRAFFIC_CONFIG = require('./config/traffic_config');
 
-var APPENGINE_ENDPOINT;
-switch (process.env.STAGE) {
-    case "devo":
-        APPENGINE_ENDPOINT = "https://devo-pratilipi.appspot.com";
-        break;
-    case "gamma":
-        APPENGINE_ENDPOINT = "https://gae-gamma.pratilipi.com";
-        break;
-    case "prod":
-        APPENGINE_ENDPOINT = "https://gae-prod.pratilipi.com";
-        break;
-    default:
-        APPENGINE_ENDPOINT = "https://devo-pratilipi.appspot.com";
-        break;
-}
-
 const UNEXPECTED_SERVER_EXCEPTION = { "message": "Some exception occurred at server. Please try again." };
 
 String.prototype.isStaticFileRequest = function () {
@@ -198,6 +182,21 @@ app.use((req, res, next) => {
 app.get('/*', (req, res, next) => {
     if (process.env.STAGE === "prod") {
         if (req.path === '/sitemap' || req.path === '/robots.txt') {
+            var APPENGINE_ENDPOINT;
+            switch (process.env.STAGE) {
+                case "devo":
+                    APPENGINE_ENDPOINT = "https://devo-pratilipi.appspot.com";
+                    break;
+                case "gamma":
+                    APPENGINE_ENDPOINT = "https://gae-gamma.pratilipi.com";
+                    break;
+                case "prod":
+                    APPENGINE_ENDPOINT = "https://gae-prod.pratilipi.com";
+                    break;
+                default:
+                    APPENGINE_ENDPOINT = "https://devo-pratilipi.appspot.com";
+                    break;
+            }
             var url = APPENGINE_ENDPOINT + req.url;
             request.get({
                 uri: url,
@@ -404,11 +403,13 @@ app.use((req, res, next) => {
         next();
     } else {
         var accessToken = req.cookies["access_token"];
-        var url = APPENGINE_ENDPOINT + "/ecs/accesstoken";
-        if (accessToken) url += "?accessToken=" + accessToken;
-        request(url, (error, response, body) => {
+        var headers = {};
+        if (accessToken) headers[ "Access-Token" ] = accessToken;
+		var options = { url: process.env.API_END_POINT + "/user/accesstoken",
+                      headers: headers,
+                      method: 'GET' };
+        request( options, (error, response, body) => {
             if (error) {
-
                 res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
             } else {
                 try { accessToken = JSON.parse(body)["accessToken"]; } catch (e) {}
