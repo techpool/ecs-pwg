@@ -417,6 +417,7 @@ app.use((req, res, next) => {
                     expiryDateMillis = JSON.parse(body)["expiryMills"];
                 } catch (e) {}
                 if (!accessToken) {
+		    console.log(`Error: accessToken ${body}`);
                     res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
                     return;
                 }
