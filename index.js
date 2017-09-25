@@ -402,33 +402,33 @@ app.use((req, res, next) => {
     if (req.path.isStaticFileRequest()) {
         next();
     } else {
-        var accessToken = req.cookies["access_token"];
-        var headers = {};
-        if (accessToken) headers[ "Access-Token" ] = accessToken;
-		var options = { url: process.env.API_END_POINT + "/user/accesstoken",
-                      headers: headers,
+        var options = { url: req.headers.host + "/api/user/accesstoken",
+                      headers: req.headers,
                       method: 'GET' };
         request( options, (error, response, body) => {
             if (error) {
                 res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
             } else {
-                try { accessToken = JSON.parse(body)["accessToken"]; } catch (e) {}
+                var accessToken, expiryDateMillis;
+                try {
+                    accessToken = JSON.parse(body)["accessToken"];
+                    expiryDateMillis = JSON.parse(body)["expiryMills"];
+                } catch (e) {}
                 if (!accessToken) {
-
                     res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
-                } else {
-                    var domain = process.env.STAGE === 'devo' ? '.ptlp.co' : '.pratilipi.com';
-                    if (TRAFFIC_CONFIG[req.headers.host]["VERSION"] === "ALPHA")
-                        domain = "localhost";
-                    res.locals["access-token"] = accessToken;
-                    res.cookie('access_token', accessToken, {
-                        domain: domain,
-                        path: '/',
-                        maxAge: 30 * 24 * 3600000, // 30 days
-                        httpOnly: false
-                    });
-                    next();
+                    return;
                 }
+                var domain = process.env.STAGE === 'devo' ? '.ptlp.co' : '.pratilipi.com';
+                if (TRAFFIC_CONFIG[req.headers.host]["VERSION"] === "ALPHA")
+                    domain = "localhost";
+                res.locals["access-token"] = accessToken;
+                res.cookie('access_token', accessToken, {
+                    domain: domain,
+                    path: '/',
+                    maxAge: new Date(expiryDateMillis),
+                    httpOnly: false
+                });
+                next();
             }
         });
     }
