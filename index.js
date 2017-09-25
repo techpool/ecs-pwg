@@ -426,7 +426,7 @@ app.use((req, res, next) => {
                 res.cookie('access_token', accessToken, {
                     domain: domain,
                     path: '/',
-                    maxAge: new Date(expiryDateMillis),
+                    maxAge: new Date(expiryDateMillis) - Date.now(),
                     httpOnly: false
                 });
                 next();
