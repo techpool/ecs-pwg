@@ -408,6 +408,7 @@ app.use((req, res, next) => {
 		console.log( "options: " + JSON.stringify(options) );
         request( options, (error, response, body) => {
             if (error) {
+		console.log(`Error: ${JSON.stringify(error,null,4)}`);
                 res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
             } else {
                 var accessToken, expiryDateMillis;
