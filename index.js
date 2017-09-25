@@ -405,7 +405,7 @@ app.use((req, res, next) => {
         var options = { url: "https://" + req.headers.host + "/api/user/accesstoken",
                       headers: req.headers,
                       method: 'GET' };
-		console.log( "options: " + JSON.parse(options) );
+		console.log( "options: " + JSON.stringify(options) );
         request( options, (error, response, body) => {
             if (error) {
                 res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
