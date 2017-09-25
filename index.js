@@ -402,9 +402,10 @@ app.use((req, res, next) => {
     if (req.path.isStaticFileRequest()) {
         next();
     } else {
-        var options = { url: req.headers.host + "/api/user/accesstoken",
+        var options = { url: "https://" + req.headers.host + "/api/user/accesstoken",
                       headers: req.headers,
                       method: 'GET' };
+		console.log( "options: " + JSON.parse(options) );
         request( options, (error, response, body) => {
             if (error) {
                 res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
