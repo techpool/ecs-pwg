@@ -5,7 +5,7 @@ module.exports = {
 		'REDIS_HOST': 'localhost',
 		'REDIS_PORT': 6379,
 		'REDIS_DB': 0,
-		'PWG_LOAD_BALANCER': 'http://growth-ecs.e6ocw5.0001.apse1.cache.amazonaws.com'
+		'PWG_LOAD_BALANCER': 'http://localhost:8080'
 	},
 	devo: {
 		'SERVICE_PORT': 80,
