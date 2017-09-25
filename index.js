@@ -403,11 +403,13 @@ app.use((req, res, next) => {
         next();
     } else {
         var accessToken = req.cookies["access_token"];
-        var url = process.env.API_END_POINT + "/user/accesstoken";
-        if (accessToken) url += "?accessToken=" + accessToken;
-        request(url, (error, response, body) => {
+        var headers = {};
+        if (accessToken) headers[ "Access-Token" ] = accessToken;
+		var options = { url: process.env.API_END_POINT + "/user/accesstoken",
+                      headers: headers,
+                      method: 'GET' };
+        request( options, (error, response, body) => {
             if (error) {
-
                 res.status(500).send(UNEXPECTED_SERVER_EXCEPTION);
             } else {
                 try { accessToken = JSON.parse(body)["accessToken"]; } catch (e) {}
