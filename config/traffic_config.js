@@ -726,13 +726,5 @@ module.exports = {
         "BASIC_VERSION": false,
         "TTL": 14,
         "VERSION": "ALPHA"
-    },
-    "localhost:8081":
-    {
-        "STACK": "PRODUCT",
-        "BASIC_DOMAIN": "localhost:8081",
-        "BASIC_VERSION": false,
-        "TTL": 14,
-        "VERSION": "ALPHA"
     }
 }

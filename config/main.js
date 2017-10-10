@@ -1,6 +1,6 @@
 module.exports = {
 	local: {
-		'SERVICE_PORT': 3000,
+		'SERVICE_PORT': 8080,
 		'REDIS_NOTIFY_EVENTS': 'Ex',
 		'REDIS_HOST': 'localhost',
 		'REDIS_PORT': 6379,
