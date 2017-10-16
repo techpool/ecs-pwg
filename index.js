@@ -696,6 +696,7 @@ app.use(function (req, res, next) {
         function (fetchedBucketId, waterfallCallback) {
             const trafficDetails = TRAFFIC_CONFIG[hostName];
             console.log('674:fetchedBucketId: ', fetchedBucketId);
+	    res.locals["bucketId"] = fetchedBucketId;
             if (trafficDetails.GROWTH_PERCENTAGE && trafficDetails.GROWTH_PERCENTAGE > fetchedBucketId) {
                 waterfallCallback(null, 'REDIRECT_TO_GROWTH');
             } else {
@@ -781,6 +782,7 @@ app.use(function (req, res, next) {
         function (indexOfBucketWithMinimumUsers, waterfallCallback) {
             const bucketId = indexOfBucketWithMinimumUsers + 1;
             const trafficDetails = TRAFFIC_CONFIG[hostName];
+	    res.locals["bucketId"] = bucketId;
             if (trafficDetails.GROWTH_PERCENTAGE && trafficDetails.GROWTH_PERCENTAGE >= bucketId) {
                 waterfallCallback(null, 'REDIRECT_TO_GROWTH');
             } else {
@@ -799,6 +801,20 @@ app.use(function (req, res, next) {
             next();
         }
     });
+});
+
+// Middleware to set the bucket ID cookie
+app.use(function (req, res, next) {
+    const bucketId = res.locals["bucketId"];
+    const domain = process.env.STAGE === 'devo' ? '.ptlp.co' : '.pratilipi.com';
+    if (TRAFFIC_CONFIG[req.headers.host]["VERSION"] === "ALPHA")
+    	domain = "localhost";
+    res.cookie('bucketId', accessToken, {
+	domain: domain,
+	path: '/',
+	httpOnly: false
+    });
+    next();
 });
 
 app.use(function (req, res, next) {
