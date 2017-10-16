@@ -809,7 +809,7 @@ app.use(function (req, res, next) {
     const domain = process.env.STAGE === 'devo' ? '.ptlp.co' : '.pratilipi.com';
     if (TRAFFIC_CONFIG[req.headers.host]["VERSION"] === "ALPHA")
     	domain = "localhost";
-    res.cookie('bucketId', accessToken, {
+    res.cookie('bucketId', bucketId, {
 	domain: domain,
 	path: '/',
 	httpOnly: false
