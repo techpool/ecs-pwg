@@ -806,6 +806,10 @@ app.use(function (req, res, next) {
 // Middleware to set the bucket ID cookie
 app.use(function (req, res, next) {
     const bucketId = res.locals["bucketId"];
+    if (!bucketId) {
+    	next();
+	return;
+    }
     const domain = process.env.STAGE === 'devo' ? '.ptlp.co' : '.pratilipi.com';
     if (TRAFFIC_CONFIG[req.headers.host]["VERSION"] === "ALPHA")
     	domain = "localhost";
