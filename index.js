@@ -815,12 +815,12 @@ app.use(function (req, res, next) {
     	domain = "localhost";
 	
     const ttlInDays = TRAFFIC_CONFIG[req.headers.host].TTL || 1;
-    const ttlInMiliSeconds = ttlInDays * 24 * 60 * 60 * 1000;
+    const ttlInMilliSeconds = ttlInDays * 24 * 60 * 60 * 1000;
     res.cookie('bucketId', bucketId, {
 	domain: domain,
 	path: '/',
 	httpOnly: false,
-	maxAge: ttlInMiliSeconds,
+	maxAge: ttlInMilliSeconds,
     });
     next();
 });
