@@ -337,7 +337,6 @@ module.exports = {
     },
     "tamil-gamma-gr.pratilipi.com":
     {
-        "STACK": "GROWTH",
         "BASIC_DOMAIN": "ta-gamma-gr.pratilipi.com",
         "BASIC_VERSION": false,
         "TTL": 7,
@@ -625,7 +624,6 @@ module.exports = {
     },
     "tamil-devo-gr.ptlp.co":
     {
-        "STACK": "GROWTH",
         "BASIC_DOMAIN": "ta-devo-gr.ptlp.co",
         "BASIC_VERSION": false,
         "TTL": 7,
