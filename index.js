@@ -813,11 +813,29 @@ app.use(function (req, res, next) {
     const domain = process.env.STAGE === 'devo' ? '.ptlp.co' : '.pratilipi.com';
     if (TRAFFIC_CONFIG[req.headers.host]["VERSION"] === "ALPHA")
     	domain = "localhost";
+	
+    const ttlInDays = TRAFFIC_CONFIG[req.headers.host].TTL || 1;
+    const ttlInMilliSeconds = ttlInDays * 24 * 60 * 60 * 1000;
     res.cookie('bucketId', bucketId, {
 	domain: domain,
 	path: '/',
-	httpOnly: false
+	httpOnly: false,
+	maxAge: ttlInMilliSeconds,
     });
+    next();
+});
+
+// Middleware to set bucket ID as headers
+app.use(function (req, res, next) {
+    const bucketId = res.locals["bucketId"];
+    
+    if (!bucketId) {
+	next();
+	return;
+    }
+	
+    req.headers["bucket-id"] = bucketId;
+    req.headers["total-growth-buckets"] = TRAFFIC_CONFIG[req.headers.host].GROWTH_PERCENTAGE;
     next();
 });
 
