@@ -782,7 +782,7 @@ app.use(function (req, res, next) {
         function (indexOfBucketWithMinimumUsers, waterfallCallback) {
             const bucketId = indexOfBucketWithMinimumUsers + 1;
             const trafficDetails = TRAFFIC_CONFIG[hostName];
-	    res.locals["bucketId"] = bucketId;
+	    res.locals["bucketId"] = indexOfBucketWithMinimumUsers;
             if (trafficDetails.GROWTH_PERCENTAGE && trafficDetails.GROWTH_PERCENTAGE >= bucketId) {
                 waterfallCallback(null, 'REDIRECT_TO_GROWTH');
             } else {
