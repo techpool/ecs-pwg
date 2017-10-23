@@ -339,6 +339,7 @@ module.exports = {
     {
         "BASIC_DOMAIN": "ta-gamma-gr.pratilipi.com",
         "BASIC_VERSION": false,
+        "GROWTH_PERCENTAGE": 20,
         "TTL": 7,
         "VERSION": "GAMMA_TAMIL_GR"
     },
@@ -626,6 +627,7 @@ module.exports = {
     {
         "BASIC_DOMAIN": "ta-devo-gr.ptlp.co",
         "BASIC_VERSION": false,
+        "GROWTH_PERCENTAGE": 20,
         "TTL": 7,
         "VERSION": "DEVO_TAMIL_GR"
     },
