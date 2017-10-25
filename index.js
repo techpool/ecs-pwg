@@ -53,6 +53,7 @@ app.get('/health', (req, res, next) => {
     res.send(Date.now() + "");
 });
 
+/*
 app.get('/delete', function (req, res, next) {
     redisUtility.flushdb(function (errorInFlushing) {
         if (errorInFlushing) {
@@ -66,6 +67,7 @@ app.get('/delete', function (req, res, next) {
         });
     });
 });
+*/
 
 app.get('/bucket/:bucketId', function (req, res, next) {
     const bucketId = req.params.bucketId;
