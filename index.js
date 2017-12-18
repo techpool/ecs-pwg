@@ -943,7 +943,7 @@ function handleAccessTokenExpiry(accessTokenKey) {
 redisUtility.pubsubConnection.psubscribe('*');
 
 redisUtility.pubsubConnection.on('pmessage', function (pattern, channel, message) {
-    if (channel === '__keyevent@0__:expired') {
+	if (channel === `__keyevent@${CONFIG.REDIS_DB}__:expired`) {
         console.log('--------EXPIRY EVENT--------');
         console.log(pattern);
         console.log(channel);
