@@ -875,6 +875,7 @@ function __redirect(req, res, port) {
         jar: true
     }).on('response',
         function (response) {
+            console.log(`PWG_DEBUG :: port ${port} :: ${response.statusCode}`);
             res.writeHead(response.statusCode, response.headers);
         }
     ).pipe(res);
