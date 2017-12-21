@@ -4,7 +4,8 @@ const
 
 const
 	stage = process.env.STAGE || 'local',
-	hostConfig = require('./../config/host');
+	hostConfig = require('./../config/host'),
+	hostRedirectionConfig = require('./../config/hostRedirection');
 
 
 /*
@@ -44,15 +45,12 @@ router.use((req, res, next) => {
 // Redirection to mini website based on User-Agent headers
 router.use((req, res, next) => {
 
-	const
-		web = hostConfig[req.headers.host],
-		userAgent = req.get('User-Agent');
-
-	if (web.BASIC_VERSION || stage !== 'prod')
+	const redirectHost = hostRedirectionConfig[req.headers.host];
+	if (!redirectHost)
 		return next();
 
-
 	// basicBrowser is false by default
+	const userAgent = req.get('User-Agent');
 	let basicBrowser = false;
 
 	if (userAgent == null || userAgent.trim() === "") {
@@ -154,8 +152,10 @@ router.use((req, res, next) => {
 
 
 	if (basicBrowser)
-		return res.redirect(307, (req.secure ? 'https://' : 'http://') + web.BASIC_DOMAIN + req.originalUrl);
+		return res.redirect(307, (req.secure ? 'https://' : 'http://') + redirectHost + req.originalUrl);
+
 	return next();
+
 });
 
 module.exports = router;
