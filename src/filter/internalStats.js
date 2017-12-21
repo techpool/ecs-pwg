@@ -22,14 +22,13 @@ router.use((req, res, next) => {
 router.get('/keys', wrap(function *(req, res, next) { res.status(200).json(yield dataAccessor.getAllKeys()) }));
 
 // Check bucket stats
-// TODO: Hardcoding 100
-router.get('/stats', wrap(function *(req, res, next) { res.status(200).json(yield dataAccessor.getBucketStats(req.headers.host, 100)) }));
+router.get('/stats', wrap(function *(req, res, next) { res.status(200).json(yield dataAccessor.getBucketStats(req.headers.host, hostConfig[req.headers.host].BUCKET.TOTAL)) }));
 
 // Check bucket stats of a particular bucket
 router.get('/bucket/:bucketId', wrap(function *(req, res, next) { res.status(200).json(yield dataAccessor.getBucket(req.params.bucketId, req.headers.host)) }));
 
 // Delete All Data
-router.delete('/lets_agree_to_disagree', wrap(function *(req, res, next) { res.status(200).json({message: yield dataAccessor.clearDb()}) }));
+router.get('/lets_agree_to_disagree', wrap(function *(req, res, next) { res.status(200).json({message: yield dataAccessor.clearDb()}) }));
 
 
 module.exports = router;

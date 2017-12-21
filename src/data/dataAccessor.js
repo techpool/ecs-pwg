@@ -48,6 +48,17 @@ DataAccessor.prototype.get = (accessToken, host) =>
 		;
 	});
 
+DataAccessor.prototype.getByKey = (key) =>
+	co(function * () {
+		return yield redis
+			.getAsync(key)
+			.catch(() => {
+				console.error(`ERROR :: REDIS_GET_FAIL :: ${key}`);
+				return null;
+			})
+		;
+	});
+
 DataAccessor.prototype.delete = (accessToken, host, bucketId) =>
 	co(function * () {
 

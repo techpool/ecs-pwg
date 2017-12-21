@@ -12,7 +12,7 @@ const PipeUtil = function() {
         req.pipe(request({
             uri: options.uri || options.url || stageConfig.ECS_ENDPOINT,
             method: options.method || req.method,
-            qs: options.qs || options.query || req.query || {},
+            qs: options.query || req.query || {},
             headers: options.headers || req.headers || {},
             followAllRedirects: false,
             followRedirect: false,
@@ -24,14 +24,17 @@ const PipeUtil = function() {
         })
         .pipe(res);
 
-    self.pipeToMini = (req, res, options) =>
-        self.pipe(req, res, Object.assign({}, options, {'uri': stageConfig.ECS_ENDPOINT + ':81'}));
+    self.pipeToMiniG = (req, res, options) =>
+        self.pipe(req, res, Object.assign({}, options, {'uri': stageConfig.ECS_ENDPOINT + ':81' + req.path}));
+
+    self.pipeToMiniP = (req, res, options) =>
+        self.pipe(req, res, Object.assign({}, options, {'uri': stageConfig.ECS_ENDPOINT + ':81' + req.path}));
 
     self.pipeToWebG = (req, res, options) =>
-        self.pipe(req, res, Object.assign({}, options, {'uri': stageConfig.ECS_ENDPOINT + ':8081'}));
+        self.pipe(req, res, Object.assign({}, options, {'uri': stageConfig.ECS_ENDPOINT + ':8081' + req.path}));
 
     self.pipeToWebP = (req, res, options) =>
-        self.pipe(req, res, Object.assign({}, options, {'uri': stageConfig.ECS_ENDPOINT + ':8080'}));
+        self.pipe(req, res, Object.assign({}, options, {'uri': stageConfig.ECS_ENDPOINT + ':8080' + req.path}));
 
 };
 

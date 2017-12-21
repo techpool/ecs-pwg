@@ -67,7 +67,7 @@ router.get('/*', (req, res, next) => {
     }
 
     if (isCrawler)
-        return pipeUtil.pipeToMini(req, res, {
+        return pipeUtil.pipeToMiniP(req, res, {
             headers: {'Access-Token': '5deb8b92-f406-4a5c-ad8b-db2417461b70'} // TODO: Remove hack
         });
 

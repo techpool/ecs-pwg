@@ -3,18 +3,15 @@ const
     express = require('express'),
     morgan = require('morgan'),
 	cookieParser = require('cookie-parser'),
-	logger = require('morgan');
+    logger = require('morgan'),
+    compression = require('compression');
 
-// Filter imports
 const
-    hostRedirectionFilter = require('./filter/hostRedirection'),
-    pathRedirectionFilter = require('./filter/pathRedirection'),
-    crawlerFilter = require('./filter/crawler'),
-    internalStatsFilter = require('./filter/internalStats'),
-    accessTokenFilter = require('./filter/accessToken'),
-    forceRedirectionFilter = require('./filter/forceRedirection'),
-    bucketFilter = require('./filter/bucket');
+    Stack = require('./enum/stack'),
+    Version = require('./enum/version');
 
+const
+    pipeUtil = require('./util/common/pipe');
 
 // Prototype declarations
 String.prototype.contains = function (str, startIndex) { return -1 !== String.prototype.indexOf.call(this, str, startIndex) };
@@ -24,8 +21,8 @@ String.prototype.isStaticFileRequest = function () { const staticFileExts = [".h
 // Express App
 const app = express();
 
-// Enable compression
-// TODO: Implementation
+// gzip all responses
+app.use(compression());
 
 // trust proxy
 app.enable('trust proxy');
@@ -39,50 +36,67 @@ app.use(cookieParser());
 // Health check
 app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 
+// Disabling all post, patch and delete
+app.post('*', (req, res, next) => res.status(400).json({message: 'Huh! Nice try!'}));
+app.patch('*', (req, res, next) => res.status(400).json({message: 'Aww! That was cute!'}));
+app.delete('*', (req, res, next) => res.status(400).json({message: 'Noooooooooooooooooo!'}));
 
 // Redirection Filter(s)
-app.use(hostRedirectionFilter); // Done
-app.use(pathRedirectionFilter); // Done
+app.use(require('./filter/hostRedirection'));
+app.use(require('./filter/pathRedirection'));
 
 // Crawler Filter
-app.use(crawlerFilter); // Done
+app.use(require('./filter/crawler'));
 
 // Internal developers only
-app.use('/internal/stats', internalStatsFilter); // Done
+app.use('/internal/stats', require('./filter/internalStats'));
 
 // AccessToken Filter
-app.use(accessTokenFilter); // Done
+app.use(require('./filter/accessToken'));
 
-// Force redirection
-app.use(forceRedirectionFilter); // Done
+// Bucket Filter
+app.use(require('./filter/bucket'));
 
-// Bucket Filter - assign a bucket, be it mini or web
-app.use(bucketFilter); // Done
+// Version Filter
+app.use(require('./filter/version'));
 
+// Stack Filter
+app.use(require('./filter/stack'));
 
+/*
+res.locals:
+    access-token
+    bucket-id
+    version = pwa / mini
+    stack = growth / product
+*/
 
-// res.locals:
-// access-token
-// bucket-id
-// version = pwa / mini
-// stack = growth / product
+// Logging
+app.use((req, res, next) => console.log(`${req.originalUrl} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['version']} :: ${res.locals['stack']}`));
 
+// Pipe
+app.get('*', (req, res, next) => {
 
+    // Setting headers
+    req.headers['Access-Token'] = res.locals['access-token'];
+    req.headers['Bucket-Id'] = res.locals['bucket-id'];
 
-// Figure out web or mini
-// writer panel
-// master website
-// mini website
-// referer
-// admin
-// edit-event
-// edit-blog
+    if (res.locals['version'] === Version.PWA) {
 
-// For all requests
-// app.get('*', () => {
-//     // Forward to prod-web, growth-web, prod-mini, growth-mini
-//     // Headers:
-//     // Access-Token, Bucket-Id, User-Agent
-// });
+        if (res.locals['stack'] === Stack.GROWTH) {
+            pipeUtil.pipeToWebG(req, res);
+        } else if (res.locals['stack'] === Stack.PRODUCT) {
+            pipeUtil.pipeToWebP(req, res);
+        }
+    } else if (res.locals['version'] === Version.MINI) {
+
+        if (res.locals['stack'] === Stack.GROWTH) {
+            pipeUtil.pipeToMiniG(req, res);
+        } else if (res.locals['stack'] === Stack.PRODUCT) {
+            pipeUtil.pipeToMiniP(req, res);
+        }
+    }
+
+});
 
 module.exports = app;

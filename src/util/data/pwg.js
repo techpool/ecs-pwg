@@ -30,6 +30,8 @@ const PwgUtil = function() {
 
 			yield dataAccessor.createOrUpdate(accessToken, host, hostConfig[host].TTL_IN_DAYS, indexOfBucketWithMinimumUsers);
 
+			// TODO: If failed, random number
+
 		});	
 
 
@@ -56,6 +58,14 @@ const PwgUtil = function() {
 			// If user already is alloted with a bucket, and has a valid access token, only update the expiry of the bucket
 			return dataAccessor.createOrUpdate(bucket.accessToken, bucket.host, hostConfig[bucket.host].TTL_IN_DAYS, bucket.bucketId);
 
+		});
+
+	this.deleteBucketAllocation = (key) =>
+		co(function * () {
+			const bucket = yield dataAccessor.getByKey(key).then(bucket => bucket ? JSON.parse(bucket) : null);
+			if (bucket) {
+				return yield dataAccessor.delete(bucket.accessToken, bucket.host, bucket.bucketId);
+			}
 		});
 
 };
