@@ -11,14 +11,6 @@ const
 	hostConfig = require('./../config/host');
 
 
-router.use((req, res, next) => {
-	// TODO: AccessToken check
-	if (stage === 'gamma' || stage === 'prod')
-		return next('router');
-	next();
-});
-
-
 // Get all keys
 router.get('/keys', wrap(function *(req, res, next) { res.status(200).json(yield dataAccessor.getAllKeys()) }));
 
@@ -27,6 +19,15 @@ router.get('/stats', wrap(function *(req, res, next) { res.status(200).json(yiel
 
 // Check bucket stats of a particular bucket
 router.get('/bucket/:bucketId', wrap(function *(req, res, next) { res.status(200).json(yield dataAccessor.getBucket(parseInt(req.params.bucketId), req.headers.host)) }));
+
+// Only for delete
+router.use((req, res, next) => {
+	// TODO: AccessToken check
+	if (stage === 'gamma' || stage === 'prod')
+		return next('router');
+	next();
+});
+
 
 // Delete All Data
 router.get('/lets_agree_to_disagree', wrap(function *(req, res, next) { res.status(200).json({message: yield dataAccessor.clearDb()}) }));
