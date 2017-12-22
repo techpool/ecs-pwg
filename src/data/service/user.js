@@ -16,7 +16,10 @@ const UserServiceUtil = function() {
 		// localhost testing
 		if (host.split(':')[0] === 'localhost') host = 'hindi-devo.ptlp.co';
 		let headers = {};
-		if (accessToken) headers['Access-Token'] = accessToken;
+		if (accessToken) {
+			headers['Access-Token'] = accessToken;
+			headers['AccessToken'] = accessToken; // PAG will figure out from this header
+		}
 		if (userAgent) headers['User-Agent'] = userAgent;
 		return httpUtil
 			.get(`https://${host}/api/user/accesstoken`, headers)
