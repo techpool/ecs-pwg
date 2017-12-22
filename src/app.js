@@ -72,7 +72,10 @@ res.locals:
 */
 
 // Logging
-app.use((req, res, next) => console.log(`${req.originalUrl} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['version']} :: ${res.locals['stack']}`));
+app.use((req, res, next) => {
+    console.log(`${req.originalUrl} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
+    next();
+});
 
 // Pipe
 app.get('*', (req, res, next) => {

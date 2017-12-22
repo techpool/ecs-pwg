@@ -21,6 +21,7 @@ router.use((req, res, next) => {
     // Other urls where PWA is not supported
     } else if (req.path === '/pratilipi-write' ||
         req.path === '/write' ||
+        req.path === '/admin' ||
         req.path.startsWith('/admin/') ||
         req.path === '/edit-event' ||
         req.path === '/edit-blog' ||
@@ -33,11 +34,15 @@ router.use((req, res, next) => {
     // static files
     const referer = req.header('Referer') || "";
     if (req.path.isStaticFileRequest() &&
-        (referer.contains('/pratilipi-write') ||
-            referer.contains('/write') ||
-            referer.contains('/admin') ||
-            referer.contains('/edit-event') ||
-            referer.contains('/edit-blog') ||
+        (referer.contains('/pratilipi-write?') ||
+            referer.contains('/write?') ||
+            referer.endsWith('/admin') ||
+            referer.contains('/admin?') ||
+            referer.contains('/admin/') ||
+            referer.endsWith('/edit-event') ||
+            referer.contains('/edit-event?') ||
+            referer.endsWith('/edit-blog') ||
+            referer.contains('/edit-blog?') ||
             referer.contains('loadPWA=false'))) {
 
                 version = Version.MINI;
