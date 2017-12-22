@@ -1,4 +1,6 @@
-const Version = require('./../enum/version');
+const 
+    Version = require('./../enum/version'),
+    stageConfig = require('./stage');
 
 const HostConfig = {
 
@@ -651,7 +653,7 @@ const HostConfig = {
 
 
     // local testing
-    "localhost:8080": {
+    [`localhost:${stageConfig.PORT}`]: {
         VERSION: Version.PWA,
         TTL_DAYS: 1,
         BUCKET: {

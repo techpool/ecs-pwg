@@ -29,7 +29,8 @@ router.use((req, res, next) => {
 	redirections['/events'] = '/event';
 
 	if (redirections[req.path])
-		return res.redirect(301, (req.secure ? 'https://' : 'http://') + req.headers.host + redirections[req.path] + '?' + req.originalUrl.split('?')[1]);
+		return res.redirect(301, (req.secure ? 'https://' : 'http://') + req.headers.host + req.originalUrl.replace(req.path, redirections[req.path]));
+
 	return next();
 });
 
