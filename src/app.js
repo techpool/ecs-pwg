@@ -2,7 +2,7 @@
 const
     express = require('express'),
     morgan = require('morgan'),
-	cookieParser = require('cookie-parser'),
+    cookieParser = require('cookie-parser'),
     compression = require('compression');
 
 const
