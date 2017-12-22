@@ -6,6 +6,12 @@ const
 	redis = require('./../util/common/redis')['client'];
 
 const
+	authorServiceUtil = require('./service/author'),
+	eventServiceUtil = require('./service/event'),
+	pratilipiServiceUtil = require('./service/pratilipi'),
+	userServiceUtil = require('./service/user');
+
+const
 	_getKey = (accessToken, host) => `key|${accessToken}|${host}`,
 	_getShadowKey = (accessToken, host) => `shadow|${accessToken}|${host}`,
 	_getBucketKey = (bucketId, host) => `bucket|${bucketId}|${host}`,
@@ -112,5 +118,8 @@ DataAccessor.prototype.clearDb = () =>
 			})
 		;
 	});
+
+DataAccessor.prototype.validateAccessToken = (accessToken, userAgent) =>
+	userServiceUtil.validateAccessToken(accessToken, userAgent);
 
 module.exports = new DataAccessor();
