@@ -8,7 +8,9 @@ const
 	dataAccessor = require('./../data/dataAccessor');
 
 
-const _isPathEqualSlug = (path, slug) => decodeURIComponent(path) === slug;
+const
+	_getSlugFromPath = (path) => path.split('/').pop().split('-').pop(),
+	_isPathEqualSlug = (path, slug) => decodeURIComponent(path) === slug;
 
 
 // Removal of trailing slash
@@ -55,8 +57,8 @@ router.use((req, res, next) => {
 
 // Author Slug redirection
 router.use(wrap(function *(req, res, next) {
-	if (req.path.startsWith('/user/') && req.path.count('/') === 2 && req.path.contains('-')) {
-		const author = yield dataAccessor.getAuthorBySlug(req.headers.host, req.path.split('-').pop()).catch(() => null);
+	if (req.path.startsWith('/user/') && req.path.count('/') === 2) {
+		const author = yield dataAccessor.getAuthorBySlug(req.headers.host, _getSlugFromPath(req.path)).catch(() => null);
 		if (author && author.slug) {
 			if (_isPathEqualSlug(req.path, author.slug))
 				return next('router'); // valid path
@@ -68,8 +70,8 @@ router.use(wrap(function *(req, res, next) {
 
 // Pratilipi Slug Redirections
 router.use(wrap(function *(req, res, next) {
-	if (req.path.startsWith('/story/') && req.path.count('/') === 2 && req.path.contains('-')) {
-		const pratilipi = yield dataAccessor.getPratilipiBySlug(req.headers.host, req.path.split('-').pop()).catch(() => null);
+	if (req.path.startsWith('/story/') && req.path.count('/') === 2) {
+		const pratilipi = yield dataAccessor.getPratilipiBySlug(req.headers.host, _getSlugFromPath(req.path)).catch(() => null);
 		if (pratilipi && pratilipi.pageUrl) {
 			if (_isPathEqualSlug(req.path, pratilipi.pageUrl))
 				return next('router'); // valid path
@@ -81,8 +83,8 @@ router.use(wrap(function *(req, res, next) {
 
 // Event Slug Redirections
 router.use(wrap(function *(req, res, next) {
-	if (req.path.startsWith('/event/') && req.path.count('/') === 2 && req.path.contains('-')) {
-		const event = yield dataAccessor.getEventBySlug(req.headers.host, req.path.split('-').pop()).catch(() => null);
+	if (req.path.startsWith('/event/') && req.path.count('/') === 2) {
+		const event = yield dataAccessor.getEventBySlug(req.headers.host, _getSlugFromPath(req.path)).catch(() => null);
 		if (event && event.slug) {
 			if (_isPathEqualSlug(req.path, event.slug))
 				return next('router'); // valid path
