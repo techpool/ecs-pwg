@@ -18,7 +18,8 @@ const
 
 // http to https redirection
 router.use((req, res, next) => {
-	if (stage === 'local')
+	// https exception in localhost
+	if (req.headers.host.split(':')[0] === 'localhost')
 		return next();
 	if (req.secure)
 		return next();
