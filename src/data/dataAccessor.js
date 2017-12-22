@@ -133,7 +133,7 @@ DataAccessor.prototype.clearDb = () =>
 		;
 	});
 
-DataAccessor.prototype.validateAccessToken = (accessToken, userAgent) =>
-	userServiceUtil.validateAccessToken(accessToken, userAgent);
+DataAccessor.prototype.validateAccessToken = (host, accessToken, userAgent) =>
+	userServiceUtil.validateAccessToken(host, accessToken, userAgent);
 
 module.exports = new DataAccessor();

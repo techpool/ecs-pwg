@@ -24,7 +24,7 @@ router.use(wrap(function *(req, res, next) {
 		return next();
 	}
 
-	const accessTokenResponse = yield dataAccessor.validateAccessToken(accessTokenCookie, req.headers['user-agent']).catch(() => -1);
+	const accessTokenResponse = yield dataAccessor.validateAccessToken(req.headers.host, accessTokenCookie, req.headers['user-agent']).catch(() => -1);
 	if (accessTokenResponse === -1)
 		return res.status(500).send('Oops, something went wrong, please try again');
 
