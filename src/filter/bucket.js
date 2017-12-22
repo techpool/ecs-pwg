@@ -5,13 +5,17 @@ const
 
 const
     stage = process.env.STAGE || 'local',
+    stageConfig = require('./../config/stage'),
     hostConfig = require('./../config/host');
 
 const
 	pwgUtil = require('./../util/data/pwg');
 
 
-// Setting res.locals["bucket-id"] from query
+
+// NOTE: Always use null check, if (bucketId) => bucketId can be 0 also
+
+// Setting bucketId from queryparams
 router.use((req, res, next) => {
 
     let bucketId;
@@ -22,7 +26,7 @@ router.use((req, res, next) => {
         bucketId = bucketIdQuery;
 
     // static file requests
-    if (!bucketId) {
+    if (bucketId == null) {
         const referer = req.header('Referer') || "";
         if (req.path.isStaticFileRequest() && referer.contains('bucketId')) {
             const bucketIdReferer = parseInt(referer.substring(referer.indexOf("bucketId=") + "bucketId=".length));
@@ -31,9 +35,9 @@ router.use((req, res, next) => {
         }
     }
 
-    if (bucketId) {
+    if (bucketId != null) {
         res.locals["bucket-id"] = bucketId;
-        return next('route');
+        return next('router');
     }
 
     next();
@@ -44,10 +48,10 @@ router.use((req, res, next) => {
 // Minor optimisation - reading from cookies in case of staticFileRequests - Not doing it for html file, trust issues
 router.use((req, res, next) => {
     if (req.path.isStaticFileRequest()) {
-        const bucketIdCookie = req.cookies["bucket_id"] ? parseInt(req.cookies["bucket_id"]) : null;
-        if (bucketIdCookie && bucketIdCookie >= 0 && bucketIdCookie < hostConfig[req.headers.host].BUCKET.TOTAL) {
+        const bucketIdCookie = req.cookies["bucket_id"] != null ? parseInt(req.cookies["bucket_id"]) : null;
+        if (bucketIdCookie != null && bucketIdCookie >= 0 && bucketIdCookie < hostConfig[req.headers.host].BUCKET.TOTAL) {
             res.locals["bucket-id"] = bucketIdCookie;
-            return next('route');
+            return next('router');
         }
     }
     next();
@@ -74,6 +78,7 @@ router.use(wrap(function *(req, res, next) {
     res.locals["bucket-id"] = bucketId;
 
     // Setting cookies
+    // bucketId in string -> cookies doesn't consider 0 in integer
     res.cookie('bucket_id', bucketId + '', {
         domain: stageConfig.DOMAIN,
         path: '/',

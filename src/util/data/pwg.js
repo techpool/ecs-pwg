@@ -17,20 +17,23 @@ const PwgUtil = function() {
 
 	const self = this;
 
-	this._allocateBucket = (accessToken, host) =>
+	this._allocateBucketToUser = (accessToken, host) =>
 		co(function * () {
 
-			const 
-				bucketStats = yield dataAccessor.getBucketStats(host, hostConfig[host].BUCKET.TOTAL),
-				bucketStatsArray = Object.keys(bucketStats).map(key => bucketStats[key]);
+			const bucketStats = yield dataAccessor.getBucketStats(host, hostConfig[host].BUCKET.TOTAL);
 
-			const 
-				valueOfBucketWithMinimumUsers = Math.min.apply(null, bucketStatsArray),
-				indexOfBucketWithMinimumUsers = bucketStatsArray.indexOf(valueOfBucketWithMinimumUsers);
+			let bucketId;
+			if (bucketStats) {
+				const 
+					bucketStatsArray = Object.keys(bucketStats).map(key => bucketStats[key]),
+					valueOfBucketWithMinimumUsers = Math.min.apply(null, bucketStatsArray),
+					indexOfBucketWithMinimumUsers = bucketStatsArray.indexOf(valueOfBucketWithMinimumUsers);
+				bucketId = indexOfBucketWithMinimumUsers;
+			} else {
+				bucketId = Math.floor(Math.random() * hostConfig[host].BUCKET.TOTAL);
+			}	
 
-			yield dataAccessor.createOrUpdate(accessToken, host, hostConfig[host].TTL_IN_DAYS, indexOfBucketWithMinimumUsers);
-
-			// TODO: If failed, random number
+			return yield dataAccessor.createOrUpdate(accessToken, host, bucketId, hostConfig[host].TTL_DAYS);
 
 		});	
 
@@ -44,28 +47,28 @@ const PwgUtil = function() {
 
 			// If user is new, allot a bucket to the user
 			if (bucket == null)
-				return self._allocateBucket(accessToken, host);
+				return self._allocateBucketToUser(accessToken, host);
 
 			// If user already is alloted with a bucket, but expired (and not evicted for some reason)
 			const dateToExpire = bucket.dateToExpire;
 			if (new Date(dateToExpire).getTime() < Date.now()) {
-				// Delete asynchronously
-				dataAccessor.delete(bucket.accessToken, bucket.host, bucket.bucketId).catch(() => console.error(`ERROR: DELETE_EXPIRED :: ${accessToken} :: ${host}`));
+				// Delete synchronously -> Can't be async, it will delete the original key also
+				yield dataAccessor.delete(bucket.accessToken, bucket.host, bucket.bucketId).catch(() => console.error(`ERROR: DELETE_EXPIRED :: ${accessToken} :: ${host}`));
 				// Create a new allocation to the user
-				return self._allocateBucket(accessToken, host);
+				return self._allocateBucketToUser(accessToken, host);
 			}
 
 			// If user already is alloted with a bucket, and has a valid access token, only update the expiry of the bucket
-			return dataAccessor.createOrUpdate(bucket.accessToken, bucket.host, hostConfig[bucket.host].TTL_IN_DAYS, bucket.bucketId);
+			return dataAccessor.createOrUpdate(bucket.accessToken, bucket.host, bucket.bucketId, hostConfig[bucket.host].TTL_DAYS);
 
 		});
 
 	this.deleteBucketAllocation = (key) =>
 		co(function * () {
 			const bucket = yield dataAccessor.getByKey(key).then(bucket => bucket ? JSON.parse(bucket) : null);
-			if (bucket) {
+			if (bucket)
 				return yield dataAccessor.delete(bucket.accessToken, bucket.host, bucket.bucketId);
-			}
+			return null;
 		});
 
 };

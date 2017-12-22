@@ -6,6 +6,9 @@ const
 	redis = require('./../util/common/redis')['client'];
 
 const
+	bucketEntity = require('./../entity/bucket');
+
+const
 	authorServiceUtil = require('./service/author'),
 	eventServiceUtil = require('./service/event'),
 	pratilipiServiceUtil = require('./service/pratilipi'),
@@ -20,16 +23,11 @@ const
 
 const DataAccessor = function() {};
 
-DataAccessor.prototype.createOrUpdate = (accessToken, host, ttlInDays, bucketId) =>
+DataAccessor.prototype.createOrUpdate = (accessToken, host, bucketId, ttlInDays) =>
 	co(function * () {
 
 		// Data
-		const data = {
-			accessToken: accessToken,
-			host: host,
-			bucketId: bucketId,
-			dateToExpire: Date.now() + ttlInDays*24*60*60*1000
-		};
+		const data = new bucketEntity(accessToken, host, bucketId, Date.now() + ttlInDays*24*60*60*1000);
 
 		// Setting original key
 		yield redis.setAsync(_getKey(accessToken, host), JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SET_FAIL :: ${_getKey(accessToken, host)} :: ${JSON.stringify(data)}`));
@@ -39,6 +37,9 @@ DataAccessor.prototype.createOrUpdate = (accessToken, host, ttlInDays, bucketId)
 
 		// Setting Bucket Pool
 		yield redis.saddAsync(_getBucketKey(bucketId, host), _getBucketValue(accessToken, host)).catch(() => console.error(`ERROR :: REDIS_SADD_FAIL :: ${_getBucketKey(bucketId, host)} :: ${_getBucketValue(accessToken, host)}`));
+
+		// Returning data
+		return data;
 
     });
 
