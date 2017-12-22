@@ -68,6 +68,7 @@ app.use(require('./filter/stack'));
 res.locals:
     access-token
     bucket-id
+    total-growth-buckets
     version = pwa / mini
     stack = growth / product
 */
@@ -97,6 +98,7 @@ app.get('*', (req, res, next) => {
     // Setting headers
     req.headers['Access-Token'] = res.locals['access-token'];
     req.headers['Bucket-Id'] = res.locals['bucket-id'];
+    req.headers['Total-Growth-Buckets'] = res.locals['total-growth-buckets'];
 
     if (res.locals['version'] === Version.PWA) {
 

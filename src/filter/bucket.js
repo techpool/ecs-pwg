@@ -13,6 +13,13 @@ const
 
 
 
+// Setting res.locals["total-growth-buckets"]
+router.use((req, res, next) => {
+    res.locals['total-growth-buckets'] = hostConfig[req.headers.host].BUCKET.GROWTH;
+    next();
+});
+
+
 // NOTE: Always use null check, if (bucketId) => bucketId can be 0 also
 
 // Setting bucketId from queryparams
