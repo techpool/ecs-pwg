@@ -1,17 +1,17 @@
 FROM $DOCKER_REPO/node:8.3.0
 
 COPY package.json .
-COPY package-lock.json .
 RUN npm install
 
 COPY index.js .
-
-COPY config/main.js config/main.js
-COPY config/traffic_config.js config/traffic_config.js
-
-COPY lib/redisUtility.js lib/redisUtility.js
-
+COPY config config
+COPY lib lib
 ENV PWG_LOAD_BALANCER=internal-ecs-lb-pwg-pvt-555364892.ap-southeast-1.elb.amazonaws.com
+
+
+COPY src src
+COPY server.js .
+COPY worker.js .
 
 EXPOSE 80
 
