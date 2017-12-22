@@ -1,7 +1,4 @@
-const
-	stageConfig = require('./../../config/stage'),
-	serviceConfig = require('./../../config/service'),
-	httpUtil = require('./../../util/common/http');
+const httpUtil = require('./../../util/common/http');
 
 const _convert2V2 = (accessToken) => ({
 	id: accessToken.accessToken,

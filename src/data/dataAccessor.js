@@ -9,6 +9,7 @@ const
 	bucketEntity = require('./../entity/bucket');
 
 const
+	pageService = require('./service/page'),
 	authorServiceUtil = require('./service/author'),
 	eventServiceUtil = require('./service/event'),
 	pratilipiServiceUtil = require('./service/pratilipi'),
@@ -133,7 +134,29 @@ DataAccessor.prototype.clearDb = () =>
 		;
 	});
 
+
 DataAccessor.prototype.validateAccessToken = (host, accessToken, userAgent) =>
 	userServiceUtil.validateAccessToken(host, accessToken, userAgent);
+
+DataAccessor.prototype.getPage = (host, path) =>
+	pageService.getPage(host, path);
+
+DataAccessor.prototype.getPratilipiBySlug = (host, slug) =>
+	pratilipiServiceUtil.getBySlug(host, slug);
+
+DataAccessor.prototype.getPratilipiById = (host, pratilipiId) =>
+	pratilipiServiceUtil.getById(host, pratilipiId);
+
+DataAccessor.prototype.getAuthorBySlug = (host, slug) =>
+	authorServiceUtil.getBySlug(host, slug);
+
+DataAccessor.prototype.getAuthorById = (host, authorId) =>
+	authorServiceUtil.getById(host, authorId);
+
+DataAccessor.prototype.getEventBySlug = (host, slug) =>
+	eventServiceUtil.getBySlug(host, slug);
+
+DataAccessor.prototype.getEventById = (host, eventId) =>
+	eventServiceUtil.getById(host, eventId);
 
 module.exports = new DataAccessor();

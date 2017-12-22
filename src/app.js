@@ -14,6 +14,7 @@ const
     pipeUtil = require('./util/common/pipe');
 
 // Prototype declarations
+String.prototype.count = function(s1) { return (this.length - this.replace(new RegExp(s1,"g"), '').length)/s1.length };
 String.prototype.contains = function (str, startIndex) { return -1 !== String.prototype.indexOf.call(this, str, startIndex) };
 String.prototype.equalsIgnoreCase = function(str) { return this.toUpperCase() === str.toUpperCase() };
 String.prototype.isStaticFileRequest = function () { const staticFileExts = [".html", ".css", ".js", ".ico", ".png", ".svg", ".jpg", ".jpeg", ".json"]; for (let i = 0; i < staticFileExts.length; i++) if (this && this.endsWith(staticFileExts[i])) return true; return false; };
@@ -73,7 +74,7 @@ res.locals:
 
 // Logging
 app.use((req, res, next) => {
-    console.log(`LOCALS :: ${req.originalUrl} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
+    console.log(`LOCALS :: ${decodeURIComponent(req.originalUrl)} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
     next();
 });
 

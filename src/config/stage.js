@@ -1,7 +1,7 @@
 const StageConfig = {
     local: {
-		ECS_ENDPOINT: 'https://hindi-gamma.pratilipi.com/api',
-		GCP_ENDPOINT: 'https://gae-gamma.pratilipi.com/api',
+		ECS_ENDPOINT: 'https://hindi-devo.ptlp.co/api',
+		GCP_ENDPOINT: 'https://devo-pratilipi.appspot.com/api',
 		REDIS: {
 			NOTIFY: '*',
 			HOST: 'localhost',
