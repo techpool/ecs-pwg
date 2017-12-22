@@ -17,14 +17,16 @@ const
 const
 	_getKey = (accessToken, host) => `key|${accessToken}|${host}`,
 	_getShadowKey = (accessToken, host) => `shadow|${accessToken}|${host}`,
-	_getBucketKey = (bucketId, host) => `bucket|${bucketId}|${host}`,
-	_getBucketValue = (accessToken, host) => `${accessToken}|${host}`;
+	_getBucketKey = (bucketId, host) => `bucket|${bucketId}|${host}`;
 
 
 const DataAccessor = function() {};
 
 DataAccessor.prototype.createOrUpdate = (accessToken, host, bucketId, ttlInDays) =>
 	co(function * () {
+
+		// Debug Logs
+		console.log(`DATA_ACCESSOR :: createOrUpdate :: ${accessToken} :: ${host} :: ${bucketId} :: ${ttlInDays}`);
 
 		// Data
 		const data = new bucketEntity(accessToken, host, bucketId, Date.now() + ttlInDays*24*60*60*1000);
@@ -36,7 +38,7 @@ DataAccessor.prototype.createOrUpdate = (accessToken, host, bucketId, ttlInDays)
 		yield redis.setexAsync(_getShadowKey(accessToken, host), ttlInDays*24*60*60, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SETEX_FAIL :: ${_getShadowKey(accessToken, host)} :: ${JSON.stringify(data)}`));
 
 		// Setting Bucket Pool
-		yield redis.saddAsync(_getBucketKey(bucketId, host), _getBucketValue(accessToken, host)).catch(() => console.error(`ERROR :: REDIS_SADD_FAIL :: ${_getBucketKey(bucketId, host)} :: ${_getBucketValue(accessToken, host)}`));
+		yield redis.saddAsync(_getBucketKey(bucketId, host), accessToken).catch(() => console.error(`ERROR :: REDIS_SADD_FAIL :: ${_getBucketKey(bucketId, host)} :: ${accessToken}`));
 
 		// Returning data
 		return data;
@@ -45,6 +47,10 @@ DataAccessor.prototype.createOrUpdate = (accessToken, host, bucketId, ttlInDays)
 
 DataAccessor.prototype.get = (accessToken, host) =>
 	co(function * () {
+
+		// Debug Logs
+		console.log(`DATA_ACCESSOR :: get :: ${accessToken} :: ${host}`);
+
 		return yield redis
 			.getAsync(_getKey(accessToken, host))
 			.then((data) => data ? JSON.parse(data) : null)
@@ -57,6 +63,10 @@ DataAccessor.prototype.get = (accessToken, host) =>
 
 DataAccessor.prototype.getByKey = (key) =>
 	co(function * () {
+
+		// Debug Logs
+		console.log(`DATA_ACCESSOR :: getByKey :: ${key}`);
+
 		return yield redis
 			.getAsync(key)
 			.catch(() => {
@@ -69,6 +79,9 @@ DataAccessor.prototype.getByKey = (key) =>
 DataAccessor.prototype.delete = (accessToken, host, bucketId) =>
 	co(function * () {
 
+		// Debug Logs
+		console.log(`DATA_ACCESSOR :: delete :: ${accessToken} :: ${host} :: ${bucketId}`);
+
 		// Deleting original key
 		yield redis.delAsync(_getKey(accessToken, host)).catch(() => console.error(`ERROR :: REDIS_DEL_FAIL :: ${_getKey(accessToken, host)}`));
 
@@ -76,7 +89,7 @@ DataAccessor.prototype.delete = (accessToken, host, bucketId) =>
 		yield redis.delAsync(_getShadowKey(accessToken, host)).catch(() => console.error(`ERROR :: REDIS_DEL_FAIL :: ${_getShadowKey(accessToken, host)}`));
 
 		// Removing accessToken from Bucket Pool
-		yield redis.sremAsync(_getBucketKey(bucketId, host), _getBucketValue(accessToken, host)).catch(() => console.error(`ERROR :: REDIS_SREM_FAIL :: ${_getBucketKey(bucketId, host)} :: ${_getBucketValue(accessToken, host)}`));
+		yield redis.sremAsync(_getBucketKey(bucketId, host), accessToken).catch(() => console.error(`ERROR :: REDIS_SREM_FAIL :: ${_getBucketKey(bucketId, host)} :: ${accessToken}`));
 
 	});
 

@@ -3,10 +3,10 @@ const
     express = require('express'),
     morgan = require('morgan'),
 	cookieParser = require('cookie-parser'),
-    logger = require('morgan'),
     compression = require('compression');
 
 const
+    stage = process.env.STAGE || 'local',
     Stack = require('./enum/stack'),
     Version = require('./enum/version');
 
@@ -77,7 +77,20 @@ app.use((req, res, next) => {
     next();
 });
 
-// Pipe
+// Local Environment - Send the data
+app.get('*', (req, res, next) => {
+    if (stage === 'local') {
+        return res.json({
+            accessToken: res.locals['access-token'],
+            bucketId: res.locals['bucket-id'],
+            version: res.locals['version'],
+            stack: res.locals['stack']
+        });
+    }
+    next();
+});
+
+// Pipe - Other environments
 app.get('*', (req, res, next) => {
 
     // Setting headers
