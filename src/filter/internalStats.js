@@ -14,7 +14,8 @@ const
 router.use((req, res, next) => {
 	// TODO: AccessToken check
 	if (stage === 'gamma' || stage === 'prod')
-		return next('route');
+		return next('router');
+	next();
 });
 
 
@@ -25,7 +26,7 @@ router.get('/keys', wrap(function *(req, res, next) { res.status(200).json(yield
 router.get('/stats', wrap(function *(req, res, next) { res.status(200).json(yield dataAccessor.getBucketStats(req.headers.host, hostConfig[req.headers.host].BUCKET.TOTAL)) }));
 
 // Check bucket stats of a particular bucket
-router.get('/bucket/:bucketId', wrap(function *(req, res, next) { res.status(200).json(yield dataAccessor.getBucket(req.params.bucketId, req.headers.host)) }));
+router.get('/bucket/:bucketId', wrap(function *(req, res, next) { res.status(200).json(yield dataAccessor.getBucket(parseInt(req.params.bucketId), req.headers.host)) }));
 
 // Delete All Data
 router.get('/lets_agree_to_disagree', wrap(function *(req, res, next) { res.status(200).json({message: yield dataAccessor.clearDb()}) }));
