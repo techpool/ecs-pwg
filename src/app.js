@@ -73,7 +73,7 @@ res.locals:
 
 // Logging
 app.use((req, res, next) => {
-    console.log(`${req.originalUrl} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
+    console.log(`LOCALS :: ${req.originalUrl} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
     next();
 });
 
