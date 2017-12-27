@@ -147,15 +147,15 @@ router.use(wrap(function *(req, res, next) {
 	switch (page.pageType) {
 		case 'PRATILIPI':
 			resource = yield dataAccessor.getPratilipiById(req.headers.host, page.primaryContentId).catch(() => null);
-			slug = resource.pageUrl;
+			slug = resource && resource.pageUrl;
 			break;
 		case 'AUTHOR':
 			resource = yield dataAccessor.getAuthorById(req.headers.host, page.primaryContentId).catch(() => null);
-			slug = resource.slug;
+			slug = resource && resource.slug;
 			break;
 		case 'EVENT':
 			resource = yield dataAccessor.getEventById(req.headers.host, page.primaryContentId).catch(() => null);
-			slug = resource.pageUrl;
+			slug = resource && resource.pageUrl;
 			break;
 	}
 
