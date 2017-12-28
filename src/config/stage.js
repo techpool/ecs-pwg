@@ -3,7 +3,6 @@ const StageConfig = {
 		ECS_ENDPOINT: 'https://hindi-devo.ptlp.co/api',
 		GCP_ENDPOINT: 'https://devo-pratilipi.appspot.com/api',
 		REDIS: {
-			NOTIFY: '*',
 			HOST: 'localhost',
 			PORT: 6379,
 			DB: 0
@@ -15,7 +14,6 @@ const StageConfig = {
 		ECS_ENDPOINT: process.env.API_END_POINT,
 		GCP_ENDPOINT: 'https://devo-pratilipi.appspot.com/api',
 		REDIS: {
-			NOTIFY: '*',
 			HOST: 'devo-ecs.e6ocw5.0001.apse1.cache.amazonaws.com',
 			PORT: 8080,
 			DB: 10
@@ -27,7 +25,6 @@ const StageConfig = {
 		ECS_ENDPOINT: process.env.API_END_POINT,
 		GCP_ENDPOINT: 'https://gae-gamma.pratilipi.com/api',
 		REDIS: {
-			NOTIFY: '*',
 			HOST: 'prod-ecs.cpzshl.ng.0001.apse1.cache.amazonaws.com',
 			PORT: 8080,
 			DB: 10
@@ -39,7 +36,6 @@ const StageConfig = {
 		ECS_ENDPOINT: process.env.API_END_POINT,
 		GCP_ENDPOINT: 'https://gae-prod.pratilipi.com/api',
 		REDIS: {
-			NOTIFY: '*',
 			HOST: 'prod-ecs.cpzshl.ng.0001.apse1.cache.amazonaws.com',
 			PORT: 8080,
 			DB: 10
