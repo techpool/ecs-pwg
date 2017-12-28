@@ -37,6 +37,41 @@ app.use(cookieParser());
 // Health check
 app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 
+// Test worker
+app.get('/worker/test', (req, res, next) => {
+
+    // accessToken, bucketId
+    const accessToken = Math.random().toString(36).substring(7),
+            bucketId = 0;
+
+    // Debug Logs
+    console.log(`TEST :: /worker/test :: ${accessToken} :: ${req.headers.host} :: ${bucketId}`);
+
+    // Data
+    const data = {
+        accessToken: accessToken,
+        host: req.headers.host,
+        bucketId: bucketId,
+        dateToExpire: Date.now()
+    };
+
+    // redis client
+    const redis = require('./util/common/redis')['client'];
+
+    // Setting original key
+    redis.setAsync(`key|${accessToken}|${req.headers.host}`, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SET_FAIL :: ${accessToken}`));
+
+    // Setting shadow key - 10 seconds expiry
+    redis.setexAsync(`shadow|${accessToken}|${req.headers.host}`, 10, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SETEX_FAIL :: ${accessToken}`));
+
+    // Setting Bucket Pool
+    redis.saddAsync(`bucket|${bucketId}|${req.headers.host}`, accessToken).catch(() => console.error(`ERROR :: REDIS_SADD_FAIL :: ${accessToken}`));
+
+    // Returning response
+    res.json({message: 'OK'});
+
+});
+
 // Disabling all post, patch and delete
 app.post('*', (req, res, next) => res.status(400).json({message: 'Huh! Nice try!'}));
 app.patch('*', (req, res, next) => res.status(400).json({message: 'Aww! That was cute!'}));
