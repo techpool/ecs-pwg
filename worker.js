@@ -22,3 +22,6 @@ pubsub.on('pmessage', (pattern, channel, message) => {
 });
 
 pubsub.on('psubscribe', (e) => console.log(`Redis pubsub has subscribed successfully to event: ${e}`));
+
+console.log('PWG worker started...');
+console.log('Thi service is responsible for cleaning up the expired access tokens, which are assigned to buckets!');
