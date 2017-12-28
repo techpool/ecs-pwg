@@ -42,32 +42,31 @@ router.use((req, res, next) => {
         }
     }
 
-    if (bucketId != null) {
+    if (bucketId != null)
         res.locals["bucket-id"] = bucketId;
-        return next('router');
-    }
 
     next();
 
 });
 
 
-// Minor optimisation - reading from cookies in case of staticFileRequests - Not doing it for html file, trust issues
-router.use((req, res, next) => {
+// Normal requests - without bucketId in params
+router.use(wrap(function *(req, res, next) {
+
+    // Already set
+    if (res.locals["bucket-id"])
+        return next();
+
+    // Minor optimisation - reading from cookies in case of staticFileRequests - Not doing it for html file, trust issues
     if (req.path.isStaticFileRequest()) {
         const bucketIdCookie = req.cookies["bucket_id"] != null ? parseInt(req.cookies["bucket_id"]) : null;
         if (bucketIdCookie != null && bucketIdCookie >= 0 && bucketIdCookie < hostConfig[req.headers.host].BUCKET.TOTAL) {
             res.locals["bucket-id"] = bucketIdCookie;
-            return next('router');
+            return next();
         }
     }
-    next();
-});
 
-
-// Setting bucket id for the current access token
-router.use(wrap(function *(req, res, next) {
-
+    // Setting bucket id for the current access token
     const accessToken = res.locals["access-token"];
 
     // This will happen ONLY in case of static files, which is requested from other css / service worker
@@ -83,8 +82,28 @@ router.use(wrap(function *(req, res, next) {
 
     // Setting locals
     res.locals["bucket-id"] = bucketId;
+    res.locals["_bucket-dateToExpire"] = dateToExpire;
 
-    // Setting cookies
+    next();
+
+}));
+
+
+// Setting cookies
+router.use((req, res, next) => {
+
+    // no bucket-id, no setting
+    if (res.locals["bucket-id"] == null)
+        return next();
+
+    // Not considering static files, setting only on html file
+    if (req.path.isStaticFileRequest())
+        return next();
+
+    // doing the honors
+    const bucketId = res.locals["bucket-id"],
+        dateToExpire = res.locals["_bucket-dateToExpire"] || (Date.now() + 86400000); // default - 1 day
+
     // bucketId in string -> cookies doesn't consider 0 in integer
     res.cookie('bucket_id', bucketId + '', {
         domain: stageConfig.DOMAIN,
@@ -103,6 +122,7 @@ router.use(wrap(function *(req, res, next) {
 
     next();
 
-}));
+});
+
 
 module.exports = router;
