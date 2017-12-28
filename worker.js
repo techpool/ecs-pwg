@@ -10,6 +10,7 @@ pubsub.psubscribe(stageConfig.REDIS.NOTIFY);
 
 pubsub.on('pmessage', (pattern, channel, message) => {
 	if (channel === `__keyevent@${stageConfig.REDIS.DB}__:expired`) {
+		console.log(`INFO :: REDIS_EXPIRED :: ${message}`);
 		let x = message.split('|');
 		if (x[0] === 'shadow') {
 			const key = 'key' + message.substr('shadow'.length);
