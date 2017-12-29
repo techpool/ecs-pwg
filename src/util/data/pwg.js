@@ -42,6 +42,29 @@ const PwgUtil = function() {
 	this.getBucket = (accessToken, host) =>
 		co(function * () {
 
+			/*
+			// Logic
+
+			// How it works:
+				1. When a user with an accessToken enters into the system, the following should be done:
+					a. Adding the original key with info, with expiry.
+					b. Adding the accessToken to bucket (bucket is a set of access tokens).
+					c. When the key is expired, the accessToken should be removed from the bucket. (worker's job).
+				2. Since redis doesn't doesn't give the value when it gets expired (redis only gives the key), 
+					we have to workaround the problem. We bring in the concept of shadow key. 
+					Refer: https://stackoverflow.com/questions/18328058/redis-2-8-notifications-get-value-instead-of-key-on-expire
+					a. Adding the original key with info, without expiry.
+					b. Adding the shadow key with expiry.
+					c. When the key is expired, the bucketId is got from the original key. (worker's job).
+					d. The original key is deleted, and accessToken should be removed from the bucket. (worker's job).
+				3. For some reason, lets say, the worker is not running, there should be a prevention mechanism to cleanup the redis cluster.
+					Lets take 2 approaches, A. expiring the original key, B. expiring the shadow key.
+					A. Expiring the original key, when user with same accessToken returns, the same accessToken is allocated to a bucketId, and there will be duplicate shadow key and bucketId.
+					B. Expiring the shadow key, when user with same accessToken returns, we will check the expiry of the access token, and delete the previous entity and then create a new one.
+					Conclusion: Expire the shadowKey and not the originalKey. If doublts, ask Raghu for the use case.
+				4. For a returning user, update the expiry of the accessToken.
+			*/
+
 			// get user access token
 			const bucket = yield dataAccessor.get(accessToken, host);
 
