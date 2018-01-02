@@ -5,13 +5,28 @@ const
     cookieParser = require('cookie-parser'),
     compression = require('compression');
 
+// Stage, Stack and Version
 const
     stage = process.env.STAGE || 'local',
     Stack = require('./enum/stack'),
     Version = require('./enum/version');
 
+// Filters - Declare it here, and use it henceforth (performance improvisation)
+const
+    hostRedirectionFilter = require('./filter/hostRedirection'),
+    pathRedirectionFilter = require('./filter/pathRedirection'),
+    crawlerFilter = require('./filter/crawler'),
+    internalStatsFilter = require('./filter/internalStats'),
+    accessTokenFilter = require('./filter/accessToken'),
+    bucketFilter = require('./filter/bucket'),
+    versionFilter= require('./filter/version'),
+    stackFilter = require('./filter/stack');
+
+// Utils
 const
     pipeUtil = require('./util/common/pipe');
+
+
 
 // Prototype declarations
 String.prototype.count = function(s1) { return (this.length - this.replace(new RegExp(s1,"g"), '').length)/s1.length };
@@ -38,16 +53,12 @@ app.use(cookieParser());
 app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 
 // Test app
-app.get('/app/test', (req, res, next) => {
-    // Returning response
-    res.json({message: 'OK'});
-});
+app.get('/app/test', (req, res, next) => res.json({message: 'OK'}) );
 
 // Test worker
 // redis client
 const redis = require('./util/common/redis')['client'];
-const wrap = require('co-express');
-app.get('/worker/test', wrap(function *(req, res, next) {
+app.get('/worker/test', async(req, res, next) => {
 
     // accessToken, bucketId
     const accessToken = Math.random().toString(36).substring(7) + Date.now(),
@@ -65,18 +76,19 @@ app.get('/worker/test', wrap(function *(req, res, next) {
     };
 
     // Setting original key
-    yield redis.setAsync(`key|${accessToken}|${req.headers.host}`, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SET_FAIL :: ${accessToken}`));
+    await redis.setAsync(`key|${accessToken}|${req.headers.host}`, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SET_FAIL :: ${accessToken}`));
 
     // Setting shadow key - 10 seconds expiry
-    yield redis.setexAsync(`shadow|${accessToken}|${req.headers.host}`, 10, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SETEX_FAIL :: ${accessToken}`));
+    await redis.setexAsync(`shadow|${accessToken}|${req.headers.host}`, 10, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SETEX_FAIL :: ${accessToken}`));
 
     // Setting Bucket Pool
-    yield redis.saddAsync(`bucket|${bucketId}|${req.headers.host}`, accessToken).catch(() => console.error(`ERROR :: REDIS_SADD_FAIL :: ${accessToken}`));
+    await redis.saddAsync(`bucket|${bucketId}|${req.headers.host}`, accessToken).catch(() => console.error(`ERROR :: REDIS_SADD_FAIL :: ${accessToken}`));
 
     // Returning response
     return res.json({message: 'OK'});
 
-}));
+});
+
 
 // Disabling all post, patch and delete
 app.post('*', (req, res, next) => res.status(400).json({message: 'Huh! Nice try!'}));
@@ -84,26 +96,26 @@ app.patch('*', (req, res, next) => res.status(400).json({message: 'Aww! That was
 app.delete('*', (req, res, next) => res.status(400).json({message: 'Noooooooooooooooooo!'}));
 
 // Redirection Filter(s)
-app.use(require('./filter/hostRedirection'));
-app.use(require('./filter/pathRedirection'));
+app.use(hostRedirectionFilter);
+app.use(pathRedirectionFilter);
 
 // Crawler Filter
-app.use(require('./filter/crawler'));
+app.use(crawlerFilter);
 
 // Internal developers only
-app.use('/internal/stats', require('./filter/internalStats'));
+app.use('/internal/stats', internalStatsFilter);
 
 // AccessToken Filter
-app.use(require('./filter/accessToken'));
+app.use(accessTokenFilter);
 
 // Bucket Filter
-app.use(require('./filter/bucket'));
+app.use(bucketFilter);
 
 // Version Filter
-app.use(require('./filter/version'));
+app.use(versionFilter);
 
 // Stack Filter
-app.use(require('./filter/stack'));
+app.use(stackFilter);
 
 /*
 res.locals:
