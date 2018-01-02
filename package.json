@@ -1,12 +1,15 @@
 {
   "name": "ecs-pwg",
   "version": "1.0.0",
-  "description": "",
+  "description": "Pratilipi Web Gateway",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pratilipi/ecs-pwg.git"
+  },
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "service": "node server.js",
+    "server": "node server.js",
     "worker": "node worker.js"
   },
   "author": "",
