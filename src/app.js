@@ -128,12 +128,14 @@ res.locals:
 
 // Logging
 app.use((req, res, next) => {
-    console.log(`LOCALS :: ${decodeURIComponent(req.originalUrl)} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
+    console.log(`DEBUG :: ${decodeURIComponent(req.originalUrl)} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
     next();
 });
 
-// Local Environment - Send the data
+// Pipe request to response
 app.get('*', (req, res, next) => {
+
+    // Local Environment - Send the data
     if (stage === 'local') {
         return res.json({
             accessToken: res.locals['access-token'],
@@ -142,16 +144,13 @@ app.get('*', (req, res, next) => {
             stack: res.locals['stack']
         });
     }
-    next();
-});
-
-// Pipe - Other environments
-app.get('*', (req, res, next) => {
 
     // Setting headers
     req.headers['Access-Token'] = res.locals['access-token'];
     req.headers['Bucket-Id'] = res.locals['bucket-id'];
     req.headers['Total-Growth-Buckets'] = res.locals['total-growth-buckets'];
+    req.headers['Version'] = res.locals['version'];
+    req.headers['Stack'] = res.locals['stack'];
 
     if (res.locals['version'] === Version.PWA) {
 
