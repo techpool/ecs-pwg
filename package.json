@@ -12,21 +12,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "async": "^2.6.0",
-    "async-lock": "^1.1.0",
     "bluebird": "^3.5.1",
-    "co": "^4.6.0",
-    "co-express": "^2.0.0",
     "compression": "^1.7.1",
     "cookie-parser": "^1.4.3",
     "express": "^4.15.4",
     "lodash": "^4.17.4",
     "morgan": "^1.8.2",
-    "query-string": "^5.0.0",
     "querystring": "^0.2.0",
     "redis": "^2.8.0",
     "request": "^2.81.0",
-    "request-promise": "^4.2.2",
-    "url-parse": "^1.1.9"
+    "request-promise": "^4.2.2"
   }
 }
