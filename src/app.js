@@ -46,7 +46,8 @@ app.get('/app/test', (req, res, next) => {
 // Test worker
 // redis client
 const redis = require('./util/common/redis')['client'];
-app.get('/worker/test', (req, res, next) => {
+const wrap = require('co-express');
+app.get('/worker/test', wrap(function *(req, res, next) {
 
     // accessToken, bucketId
     const accessToken = Math.random().toString(36).substring(7) + Date.now(),
@@ -64,18 +65,18 @@ app.get('/worker/test', (req, res, next) => {
     };
 
     // Setting original key
-    redis.setAsync(`key|${accessToken}|${req.headers.host}`, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SET_FAIL :: ${accessToken}`));
+    yield redis.setAsync(`key|${accessToken}|${req.headers.host}`, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SET_FAIL :: ${accessToken}`));
 
     // Setting shadow key - 10 seconds expiry
-    redis.setexAsync(`shadow|${accessToken}|${req.headers.host}`, 10, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SETEX_FAIL :: ${accessToken}`));
+    yield redis.setexAsync(`shadow|${accessToken}|${req.headers.host}`, 10, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SETEX_FAIL :: ${accessToken}`));
 
     // Setting Bucket Pool
-    redis.saddAsync(`bucket|${bucketId}|${req.headers.host}`, accessToken).catch(() => console.error(`ERROR :: REDIS_SADD_FAIL :: ${accessToken}`));
+    yield redis.saddAsync(`bucket|${bucketId}|${req.headers.host}`, accessToken).catch(() => console.error(`ERROR :: REDIS_SADD_FAIL :: ${accessToken}`));
 
     // Returning response
-    res.json({message: 'OK'});
+    return res.json({message: 'OK'});
 
-});
+}));
 
 // Disabling all post, patch and delete
 app.post('*', (req, res, next) => res.status(400).json({message: 'Huh! Nice try!'}));
