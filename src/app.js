@@ -41,7 +41,7 @@ app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 app.get('/worker/test', (req, res, next) => {
 
     // accessToken, bucketId
-    const accessToken = Math.random().toString(36).substring(7),
+    const accessToken = Math.random().toString(36).substring(7) + Date.now(),
             bucketId = 0;
 
     // Debug Logs
