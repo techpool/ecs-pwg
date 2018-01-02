@@ -1,7 +1,6 @@
 const
 	express = require('express'),
 	router = express.Router(),
-	wrap = require('co-express'),
 	qs = require('querystring');
 
 const
@@ -56,9 +55,9 @@ router.use((req, res, next) => {
 });
 
 // Author Slug redirection
-router.use(wrap(function *(req, res, next) {
+router.use(async(req, res, next) => {
 	if (req.path.startsWith('/user/') && req.path.count('/') === 2) {
-		const author = yield dataAccessor.getAuthorBySlug(req.headers.host, _getSlugFromPath(req.path)).catch(() => null);
+		const author = await dataAccessor.getAuthorBySlug(req.headers.host, _getSlugFromPath(req.path)).catch(() => null);
 		if (author && author.slug) {
 			if (_isPathEqualSlug(req.path, author.slug))
 				return next('router'); // valid path
@@ -66,12 +65,12 @@ router.use(wrap(function *(req, res, next) {
 		}
 	}
 	next();
-}));
+});
 
 // Pratilipi Slug Redirections
-router.use(wrap(function *(req, res, next) {
+router.use(async(req, res, next) => {
 	if (req.path.startsWith('/story/') && req.path.count('/') === 2) {
-		const pratilipi = yield dataAccessor.getPratilipiBySlug(req.headers.host, _getSlugFromPath(req.path)).catch(() => null);
+		const pratilipi = await dataAccessor.getPratilipiBySlug(req.headers.host, _getSlugFromPath(req.path)).catch(() => null);
 		if (pratilipi && pratilipi.pageUrl) {
 			if (_isPathEqualSlug(req.path, pratilipi.pageUrl))
 				return next('router'); // valid path
@@ -79,12 +78,12 @@ router.use(wrap(function *(req, res, next) {
 		}
 	}
 	next();
-}));
+});
 
 // Event Slug Redirections
-router.use(wrap(function *(req, res, next) {
+router.use(async(req, res, next) => {
 	if (req.path.startsWith('/event/') && req.path.count('/') === 2) {
-		const event = yield dataAccessor.getEventBySlug(req.headers.host, _getSlugFromPath(req.path)).catch(() => null);
+		const event = await dataAccessor.getEventBySlug(req.headers.host, _getSlugFromPath(req.path)).catch(() => null);
 		if (event && event.slug) {
 			if (_isPathEqualSlug(req.path, event.slug))
 				return next('router'); // valid path
@@ -92,10 +91,10 @@ router.use(wrap(function *(req, res, next) {
 		}
 	}
 	next();
-}));
+});
 
 //// Page Redirections
-router.use(wrap(function *(req, res, next) {
+router.use(async(req, res, next) => {
 	const hardcodedUrlList = [
 		'/',
 		'/read',
@@ -137,7 +136,7 @@ router.use(wrap(function *(req, res, next) {
 		return next('router');
 
 	// Backward compatibility - hit page service
-	const page = yield dataAccessor.getPage(req.headers.host, req.path).catch(() => null);
+	const page = await dataAccessor.getPage(req.headers.host, req.path).catch(() => null);
 
 	if (page == null)
 		return next('router');
@@ -146,15 +145,15 @@ router.use(wrap(function *(req, res, next) {
 	let resource, slug;
 	switch (page.pageType) {
 		case 'PRATILIPI':
-			resource = yield dataAccessor.getPratilipiById(req.headers.host, page.primaryContentId).catch(() => null);
+			resource = await dataAccessor.getPratilipiById(req.headers.host, page.primaryContentId).catch(() => null);
 			slug = resource && resource.pageUrl;
 			break;
 		case 'AUTHOR':
-			resource = yield dataAccessor.getAuthorById(req.headers.host, page.primaryContentId).catch(() => null);
+			resource = await dataAccessor.getAuthorById(req.headers.host, page.primaryContentId).catch(() => null);
 			slug = resource && resource.slug;
 			break;
 		case 'EVENT':
-			resource = yield dataAccessor.getEventById(req.headers.host, page.primaryContentId).catch(() => null);
+			resource = await dataAccessor.getEventById(req.headers.host, page.primaryContentId).catch(() => null);
 			slug = resource && resource.pageUrl;
 			break;
 	}
@@ -164,7 +163,7 @@ router.use(wrap(function *(req, res, next) {
 
 	next();
 
-}));
+});
 
 
 module.exports = router;

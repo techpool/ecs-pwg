@@ -1,7 +1,6 @@
 const
 	express = require('express'),
-    router = express.Router(),
-    wrap = require('co-express');
+    router = express.Router();
 
 const
     stage = process.env.STAGE || 'local',
@@ -51,7 +50,7 @@ router.use((req, res, next) => {
 
 
 // Normal requests - without bucketId in params
-router.use(wrap(function *(req, res, next) {
+router.use(async(req, res, next) => {
 
     // Already set
     if (res.locals["bucket-id"])
@@ -76,7 +75,7 @@ router.use(wrap(function *(req, res, next) {
     }
 
     const 
-        bucketResponse = yield pwgUtil.getBucket(accessToken, req.headers.host),
+        bucketResponse = await pwgUtil.getBucket(accessToken, req.headers.host),
         bucketId = bucketResponse['bucketId'],
         dateToExpire = bucketResponse['dateToExpire'];
 
@@ -86,7 +85,7 @@ router.use(wrap(function *(req, res, next) {
 
     next();
 
-}));
+});
 
 
 // Setting cookies

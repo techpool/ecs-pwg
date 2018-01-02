@@ -1,7 +1,6 @@
 const
 	express = require('express'),
-	router = express.Router(),
-	wrap = require('co-express');
+	router = express.Router();
 
 const
 	stage = process.env.STAGE || 'local',
@@ -12,7 +11,7 @@ const
 
 
 // Getting (or) setting access token for the current user
-router.use(wrap(function *(req, res, next) {
+router.use(async(req, res, next) => {
 
 	// First time user => accessTokenCookie will be null
 	const accessTokenCookie = req.cookies["access_token"] || null;
@@ -24,7 +23,7 @@ router.use(wrap(function *(req, res, next) {
 		return next();
 	}
 
-	const accessTokenResponse = yield dataAccessor.validateAccessToken(req.headers.host, accessTokenCookie, req.headers['user-agent']).catch(() => -1);
+	const accessTokenResponse = await dataAccessor.validateAccessToken(req.headers.host, accessTokenCookie, req.headers['user-agent']).catch(() => -1);
 	if (accessTokenResponse === -1)
 		return res.status(500).send('Oops, something went wrong, please try again');
 
@@ -45,6 +44,6 @@ router.use(wrap(function *(req, res, next) {
 
 	next();
 
-}));
+});
 
 module.exports = router;
