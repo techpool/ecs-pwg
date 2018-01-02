@@ -37,7 +37,15 @@ app.use(cookieParser());
 // Health check
 app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 
+// Test app
+app.get('/app/test', (req, res, next) => {
+    // Returning response
+    res.json({message: 'OK'});
+});
+
 // Test worker
+// redis client
+const redis = require('./util/common/redis')['client'];
 app.get('/worker/test', (req, res, next) => {
 
     // accessToken, bucketId
@@ -54,9 +62,6 @@ app.get('/worker/test', (req, res, next) => {
         bucketId: bucketId,
         dateToExpire: Date.now()
     };
-
-    // redis client
-    const redis = require('./util/common/redis')['client'];
 
     // Setting original key
     redis.setAsync(`key|${accessToken}|${req.headers.host}`, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SET_FAIL :: ${accessToken}`));
