@@ -5,8 +5,9 @@ COPY package-lock.json .
 COPY src src
 COPY server.js .
 COPY worker.js .
+COPY test.js .
 
 RUN npm install
 EXPOSE 80
 
-CMD [ "npm", "run-script", "server" ]
+CMD [ "npm", "run-script", "testelb" ]
