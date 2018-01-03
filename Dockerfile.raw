@@ -1,20 +1,19 @@
-# FROM $DOCKER_REPO/node:carbon
+FROM $DOCKER_REPO/node:carbon
 
-# COPY package.json .
-# COPY package-lock.json .
-# COPY src src
-# COPY server.js .
-# COPY worker.js .
-# COPY test.js .
+COPY package.json .
+COPY package-lock.json .
+COPY src src
+COPY server.js .
+COPY worker.js .
+COPY test.js .
 
-# RUN npm install
-# EXPOSE 80
+RUN npm install
+EXPOSE 80
 
+CMD [ "npm", "run-script", "server" ]
 # CMD [ "npm", "run-script", "testelb" ]
 
-FROM $DOCKER_REPO/jetty:9.4.6
-
-WORKDIR /var/lib/jetty
-COPY pratilipi.war $JETTY_BASE/webapps/ROOT.war
-
-EXPOSE 8080
+# FROM $DOCKER_REPO/jetty:9.4.6
+# WORKDIR /var/lib/jetty
+# COPY pratilipi.war $JETTY_BASE/webapps/ROOT.war
+# EXPOSE 80
