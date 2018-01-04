@@ -4,4 +4,4 @@ exec service nginx start &
 
 # start node server
 echo "starting node server ..."
-exec npm run-script testelb
+exec npm run-script server

@@ -18,7 +18,7 @@ const StageConfig = {
 			PORT: 8080,
 			DB: 10
 		},
-		PORT: 80,
+		PORT: process.env.SERVICE_PORT,
 		DOMAIN: '.ptlp.co'
 	},
 	gamma: {
@@ -29,7 +29,7 @@ const StageConfig = {
 			PORT: 8080,
 			DB: 10
 		},
-		PORT: 80,
+		PORT: process.env.SERVICE_PORT,
 		DOMAIN: '.pratilipi.com'
 	},
 	prod: {
@@ -40,7 +40,7 @@ const StageConfig = {
 			PORT: 8080,
 			DB: 10
 		},
-		PORT: 80,
+		PORT: process.env.SERVICE_PORT,
 		DOMAIN: '.pratilipi.com'
 	}
 };
