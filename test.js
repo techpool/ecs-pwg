@@ -1,8 +1,6 @@
-const
-	http = require('http'),
-	stageConfig = require('./src/config/stage');
+const http = require('http');
 
 http.createServer((req, res) => {
 	res.write('Hello World!');
 	res.end();
-}).listen(stageConfig.PORT);
+}).listen(8085);

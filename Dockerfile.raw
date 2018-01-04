@@ -1,5 +1,40 @@
-FROM $DOCKER_REPO/node:carbon
+FROM $DOCKER_REPO/ubuntu:16.04
 
+# Install essentials
+RUN apt-get update && \
+	apt-get install -y \
+		curl \
+		build-essential \
+		ca-certificates \
+		gcc \
+		git \
+		libpq-dev \
+		make \
+		python-pip \
+		python2.7 \
+		python2.7-dev \
+		ssh
+
+# Install nginx
+RUN apt-get install -y nginx
+
+# Configure nginx
+RUN echo "\ndaemon off;" >> /etc/nginx/nginx.conf
+RUN chown -R www-data:www-data /var/lib/nginx
+
+# Install node
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+	apt-get install -y nodejs
+
+# Cleanup
+RUN apt-get autoremove
+RUN apt-get clean
+
+# Copying nginx config files
+COPY config/service.nginx.conf /etc/nginx/servers/ecs-service
+COPY config/container.nginx.conf /etc/nginx/nginx.conf
+
+# Copying node application files
 COPY package.json .
 COPY package-lock.json .
 COPY src src
@@ -7,13 +42,13 @@ COPY server.js .
 COPY worker.js .
 COPY test.js .
 
+# Installing node dependencies
 RUN npm install
 EXPOSE 80
 
-CMD [ "npm", "run-script", "server" ]
-# CMD [ "npm", "run-script", "testelb" ]
+# Starting nginx and node server
+COPY start.sh .
+CMD ["bash", "start.sh"]
 
-# FROM $DOCKER_REPO/jetty:9.4.6
-# WORKDIR /var/lib/jetty
-# COPY pratilipi.war $JETTY_BASE/webapps/ROOT.war
-# EXPOSE 80
+# Starting node server
+# CMD [ "npm", "run-script", "server" ]
