@@ -1,7 +1,5 @@
 # start nginx
-echo "starting nginx server ..."
-exec service nginx start &
+exec service nginx start --with-threads &
 
 # start node server
-echo "starting node server ..."
 exec npm run-script server
