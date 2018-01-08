@@ -52,6 +52,3 @@ EXPOSE 80
 # Starting nginx and node server
 COPY start.sh .
 CMD ["bash", "start.sh"]
-
-# Starting node server
-# CMD [ "npm", "run-script", "server" ]
