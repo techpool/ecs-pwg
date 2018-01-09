@@ -31,13 +31,7 @@ RUN apt-get autoremove
 RUN apt-get clean
 
 # configure fd limits
-RUN echo -e "#commands\nroot soft nofile 65536\nroot hard nofile 65536\n* soft nofile 65536\n* hard nofile 65536" >> /etc/security/limits.conf
-RUN sysctl -w fs.file-max=64000
-
-# RUN ulimit -n 65536 # not allowed in aws
-# RUN echo -e "fs.file-max = 64000" >> /etc/sysctl.conf 
-# RUN sysctl -p
-# RUN echo -e "ulimit -n 65536\n" >> /etc/sysconfig/docker
+# RUN echo -e "#commands\nroot soft nofile 65536\nroot hard nofile 65536\n* soft nofile 65536\n* hard nofile 65536" >> /etc/security/limits.conf
 # RUN sysctl -w fs.file-max=64000
 
 # Environment variables
