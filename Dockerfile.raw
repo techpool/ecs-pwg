@@ -32,6 +32,8 @@ RUN apt-get clean
 
 # configure fd limits
 RUN echo "fs.file-max = 120000" >> /etc/sysctl.conf 
+RUN echo "nginx soft nofile 10000" >> /etc/security/limits.conf
+RUN echo "nginx hard nofile 30000" >> /etc/security/limits.conf
 RUN sysctl -p
 
 # Environment variables
