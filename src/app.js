@@ -52,6 +52,7 @@ app.use(cookieParser());
 // Health check
 app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 
+/*
 // Test app
 app.get('/app/test', (req, res, next) => res.json({message: 'OK'}) );
 
@@ -88,7 +89,7 @@ app.get('/worker/test', async(req, res, next) => {
     return res.json({message: 'OK'});
 
 });
-
+*/
 
 // Disabling all post, patch and delete
 app.post('*', (req, res, next) => res.status(400).json({message: 'Huh! Nice try!'}));

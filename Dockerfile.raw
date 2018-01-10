@@ -30,10 +30,6 @@ RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
 RUN apt-get autoremove
 RUN apt-get clean
 
-# configure fd limits
-# RUN echo -e "#commands\nroot soft nofile 65536\nroot hard nofile 65536\n* soft nofile 65536\n* hard nofile 65536" >> /etc/security/limits.conf
-# RUN sysctl -w fs.file-max=64000
-
 # Environment variables
 ENV SERVICE_PORT 8085
 
