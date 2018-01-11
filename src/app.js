@@ -54,7 +54,13 @@ app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 
 
 // Test app
-app.get('/app/test', (req, res, next) => res.json({message: 'OK'}) );
+const sleep = require('sleep');
+app.get('/app/test', (req, res, next) => {
+    const seconds = req.query.seconds;
+    if (seconds)
+        sleep.sleep(parseInt(req.query.seconds)); // sleeping for 2 seconds
+    res.json({message: 'OK'}) 
+});
 
 
 /*
