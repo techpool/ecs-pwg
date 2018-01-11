@@ -57,9 +57,14 @@ app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 const sleep = require('sleep');
 app.get('/app/test', (req, res, next) => {
     const seconds = req.query.seconds;
-    if (seconds)
-        sleep.sleep(parseInt(req.query.seconds)); // sleeping for 2 seconds
-    res.json({message: 'OK'}) 
+    if (seconds) {
+        if (req.query.asd === 'sync') {
+            sleep.sleep(parseInt(req.query.seconds)); // sleeping for 2 seconds
+            res.json({message: 'OK'}) 
+        } else if (req.query.asd === 'async') {
+            setTimeout(() => res.json({message: 'OK'}) , parseInt(req.query.seconds)*1000);
+        }
+    }
 });
 
 
