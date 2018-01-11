@@ -52,10 +52,12 @@ app.use(cookieParser());
 // Health check
 app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 
-/*
+
 // Test app
 app.get('/app/test', (req, res, next) => res.json({message: 'OK'}) );
 
+
+/*
 // Test worker
 // redis client
 const redis = require('./util/common/redis')['client'];
