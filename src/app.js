@@ -63,6 +63,8 @@ app.get('/app/test', (req, res, next) => {
             res.json({message: 'OK'}) 
         } else if (req.query.asd === 'async') {
             setTimeout(() => res.json({message: 'OK'}) , parseInt(req.query.seconds)*1000);
+        } else {
+            res.json({message: 'specify asd to be sync / async'}) 
         }
     }
 });
