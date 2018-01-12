@@ -52,20 +52,32 @@ app.use(cookieParser());
 // Health check
 app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 
+// Middleware which blocks requests when we're too busy 
+const toobusy = require('toobusy-js');
+app.use((req, res, next) => {
+    if (toobusy()) {
+        return res.send(503, "I'm busy right now, sorry.");
+    } else {
+        return next();
+    }
+});
+
 
 // Test app
 const sleep = require('sleep');
 app.get('/app/test', (req, res, next) => {
-    const seconds = req.query.seconds;
-    if (seconds) {
-        if (req.query.asd === 'sync') {
-            sleep.sleep(parseInt(req.query.seconds)); // sleeping for 2 seconds
-            res.json({message: 'OK'}) 
-        } else if (req.query.asd === 'async') {
-            setTimeout(() => res.json({message: 'OK'}) , parseInt(req.query.seconds)*1000);
+    const seconds = req.query.seconds ? parseInt(req.query.seconds) : null;
+    if (seconds && !isNaN(seconds) && seconds > 0 && seconds <= 100) {
+        if (req.query.behaviour === 'sync') {
+            sleep.sleep(seconds);
+            return res.json({message: `Hi! I slept for ${seconds} seconds. And I did block nodejs event loop.`});
+        } else if (req.query.behaviour === 'async') {
+            setTimeout(() => res.json({message: `Yo! I slept for ${seconds} seconds without blocking nodejs event loop.`}) , seconds*1000);
         } else {
-            res.json({message: 'specify asd to be sync / async'}) 
+            return res.json({message: 'I did nothing. Specify behaviour to be sync / async for me please :)'});
         }
+    } else {
+        return res.json({message: 'Yaay! I did nothing!'});
     }
 });
 
