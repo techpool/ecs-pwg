@@ -53,6 +53,7 @@ app.use(cookieParser());
 app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 
 // Middleware which blocks requests when we're too busy 
+/*
 const toobusy = require('toobusy-js');
 app.use((req, res, next) => {
     if (toobusy()) {
@@ -61,7 +62,7 @@ app.use((req, res, next) => {
         return next();
     }
 });
-
+*/
 
 // Test app
 const sleep = require('sleep');
