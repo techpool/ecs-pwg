@@ -637,8 +637,8 @@ const HostConfig = {
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
-            TOTAL: 1,
-            GROWTH: 1
+            TOTAL: 100,
+            GROWTH: 20
         }
     },
 
