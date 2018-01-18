@@ -64,6 +64,7 @@ app.use((req, res, next) => {
 });
 */
 
+/*
 // Test app
 const sleep = require('sleep');
 app.get('/app/test', (req, res, next) => {
@@ -81,7 +82,7 @@ app.get('/app/test', (req, res, next) => {
         return res.json({message: 'Yaay! I did nothing!'});
     }
 });
-
+*/
 
 /*
 // Test worker
