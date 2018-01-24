@@ -52,74 +52,6 @@ app.use(cookieParser());
 // Health check
 app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 
-// Middleware which blocks requests when we're too busy 
-/*
-const toobusy = require('toobusy-js');
-app.use((req, res, next) => {
-    if (toobusy()) {
-        return res.send(503, "I'm busy right now, sorry.");
-    } else {
-        return next();
-    }
-});
-*/
-
-/*
-// Test app
-const sleep = require('sleep');
-app.get('/app/test', (req, res, next) => {
-    const seconds = req.query.seconds ? parseInt(req.query.seconds) : null;
-    if (seconds && !isNaN(seconds) && seconds > 0 && seconds <= 100) {
-        if (req.query.behaviour === 'sync') {
-            sleep.sleep(seconds);
-            return res.json({message: `Hi! I slept for ${seconds} seconds. And I did block nodejs event loop.`});
-        } else if (req.query.behaviour === 'async') {
-            setTimeout(() => res.json({message: `Yo! I slept for ${seconds} seconds without blocking nodejs event loop.`}) , seconds*1000);
-        } else {
-            return res.json({message: 'I did nothing. Specify behaviour to be sync / async for me please :)'});
-        }
-    } else {
-        return res.json({message: 'Yaay! I did nothing!'});
-    }
-});
-*/
-
-/*
-// Test worker
-// redis client
-const redis = require('./util/common/redis')['client'];
-app.get('/worker/test', async(req, res, next) => {
-
-    // accessToken, bucketId
-    const accessToken = Math.random().toString(36).substring(7) + Date.now(),
-            bucketId = 0;
-
-    // Debug Logs
-    console.log(`TEST :: /worker/test :: ${accessToken} :: ${req.headers.host} :: ${bucketId}`);
-
-    // Data
-    const data = {
-        accessToken: accessToken,
-        host: req.headers.host,
-        bucketId: bucketId,
-        dateToExpire: Date.now()
-    };
-
-    // Setting original key
-    await redis.setAsync(`key|${accessToken}|${req.headers.host}`, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SET_FAIL :: ${accessToken}`));
-
-    // Setting shadow key - 10 seconds expiry
-    await redis.setexAsync(`shadow|${accessToken}|${req.headers.host}`, 10, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SETEX_FAIL :: ${accessToken}`));
-
-    // Setting Bucket Pool
-    await redis.saddAsync(`bucket|${bucketId}|${req.headers.host}`, accessToken).catch(() => console.error(`ERROR :: REDIS_SADD_FAIL :: ${accessToken}`));
-
-    // Returning response
-    return res.json({message: 'OK'});
-
-});
-*/
-
 // Disabling all post, patch and delete
 app.post('*', (req, res, next) => res.status(400).json({message: 'Huh! Nice try!'}));
 app.patch('*', (req, res, next) => res.status(400).json({message: 'Aww! That was cute!'}));
@@ -158,7 +90,7 @@ res.locals:
 
 // Logging
 app.use((req, res, next) => {
-    console.log(`DEBUG :: ${decodeURIComponent(req.originalUrl)} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
+    console.log(`DEBUG :: ${decodeURIComponent(req.originalUrl)} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['total-growth-buckets']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
     next();
 });
 
