@@ -2,8 +2,7 @@
 const
     express = require('express'),
     morgan = require('morgan'),
-    cookieParser = require('cookie-parser'),
-    compression = require('compression');
+    cookieParser = require('cookie-parser');
 
 // Stage, Stack and Version
 const
@@ -36,9 +35,6 @@ String.prototype.isStaticFileRequest = function () { const staticFileExts = [".h
 
 // Express App
 const app = express();
-
-// gzip all responses
-app.use(compression());
 
 // trust proxy
 app.enable('trust proxy');
