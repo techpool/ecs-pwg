@@ -5,24 +5,12 @@ ENV NODE_ENV=production
 
 # Install essentials
 RUN apt-get update && \
-	apt-get install -y \
-		curl \
+	apt-get install -y --fix-missing --no-install-recommends \
 		build-essential \
-		ca-certificates \
-		gcc \
-		git \
-		libpq-dev \
-		make \
-		python-pip \
-		python2.7 \
-		python2.7-dev \
-		ssh
+		curl
 
 # Install nginx
 RUN apt-get install -y nginx
-
-# Configure nginx
-RUN chown -R www-data:www-data /var/lib/nginx
 
 # Install node
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
