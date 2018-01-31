@@ -86,7 +86,7 @@ res.locals:
 
 // Logging
 app.use((req, res, next) => {
-    console.log(`DEBUG :: ${decodeURIComponent(req.originalUrl)} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['total-growth-buckets']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
+    console.log(`DEBUG :: ${decodeURIComponent(req.originalUrl)} :: ${req.headers['user-agent']} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['total-growth-buckets']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
     next();
 });
 
