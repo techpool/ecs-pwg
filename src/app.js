@@ -53,6 +53,15 @@ app.post('*', (req, res, next) => res.status(400).json({message: 'Huh! Nice try!
 app.patch('*', (req, res, next) => res.status(400).json({message: 'Aww! That was cute!'}));
 app.delete('*', (req, res, next) => res.status(400).json({message: 'Noooooooooooooooooo!'}));
 
+// poc
+app.get('/poc', (req, res, next) => {
+    const len = req.query.len ? parseInt(req.query.len) : 1;
+    if (len > 1000000) len = 1000000;
+	let message = "";
+	for(let i = 0; i < len; i++) message += "a";
+	res.send(message);
+});
+
 // Redirection Filter(s)
 app.use(hostRedirectionFilter);
 app.use(pathRedirectionFilter);
