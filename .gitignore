@@ -62,3 +62,4 @@ build-run.sh
 Dockerfile_*
 test.*
 local-*
+*.rdb
