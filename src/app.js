@@ -53,14 +53,52 @@ app.post('*', (req, res, next) => res.status(400).json({message: 'Huh! Nice try!
 app.patch('*', (req, res, next) => res.status(400).json({message: 'Aww! That was cute!'}));
 app.delete('*', (req, res, next) => res.status(400).json({message: 'Noooooooooooooooooo!'}));
 
+
+
+
+
+
+
+
+
+
+
 // poc
-app.get('/poc', (req, res, next) => {
-    const len = req.query.len ? parseInt(req.query.len) : 1;
-    if (len > 1000000) len = 1000000;
+app.get('/poc1', (req, res, next) => {
+	const len = req.query.len ? parseInt(req.query.len) : 1;
+	if (len > 1000000) len = 1000000;
 	let message = "";
 	for(let i = 0; i < len; i++) message += "a";
 	res.send(message);
 });
+
+app.get('/poc2', (req, res, next) => {
+	httpUtil.get('https://android.pratilipi.com/init?language=HINDI').then((data) => res.json(data)).catch((err) => res.json({message: 'call failed.'}));
+});
+
+app.get('/poc3', (req, res, next) => {
+	res.json({message: 'OK'});
+});
+
+app.get('/poc4', (req, res, next) => {
+	const len = req.query.len ? parseInt(req.query.len) : 1;
+	if (len > 1000000) len = 1000000;
+	let x = Date.now();
+	for(let i = 0; i < len; i++) console.log("This is a sample log...");
+	let y = Date.now();
+	console.log(`Time taken to print ${len} logs = ${y-x} ms`);
+	res.json({time: `${y-x} ms`, len: `${len}`});
+});
+
+
+
+
+
+
+
+
+
+
 
 // Redirection Filter(s)
 app.use(hostRedirectionFilter);
