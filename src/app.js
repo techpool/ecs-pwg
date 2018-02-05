@@ -55,23 +55,16 @@ app.delete('*', (req, res, next) => res.status(400).json({message: 'Nooooooooooo
 
 
 
-
-
-
-
-
-
-
-
-// poc
+/* ----------------------- POC ----------------------- */
 app.get('/poc1', (req, res, next) => {
-	const len = req.query.len ? parseInt(req.query.len) : 1;
+	let len = req.query.len ? parseInt(req.query.len) : 1;
 	if (len > 1000000) len = 1000000;
 	let message = "";
 	for(let i = 0; i < len; i++) message += "a";
 	res.send(message);
 });
 
+const httpUtil = require('./util/common/http');
 app.get('/poc2', (req, res, next) => {
 	httpUtil.get('https://android.pratilipi.com/init?language=HINDI').then((data) => res.json(data)).catch((err) => res.json({message: 'call failed.'}));
 });
@@ -81,7 +74,7 @@ app.get('/poc3', (req, res, next) => {
 });
 
 app.get('/poc4', (req, res, next) => {
-	const len = req.query.len ? parseInt(req.query.len) : 1;
+	let len = req.query.len ? parseInt(req.query.len) : 1;
 	if (len > 1000000) len = 1000000;
 	let x = Date.now();
 	for(let i = 0; i < len; i++) console.log("This is a sample log...");
@@ -89,14 +82,7 @@ app.get('/poc4', (req, res, next) => {
 	console.log(`Time taken to print ${len} logs = ${y-x} ms`);
 	res.json({time: `${y-x} ms`, len: `${len}`});
 });
-
-
-
-
-
-
-
-
+/* ----------------------- POC ----------------------- */
 
 
 
