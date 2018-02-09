@@ -1,7 +1,7 @@
 const StageConfig = {
     local: {
 		ECS_ENDPOINT: 'https://tamil-gamma.pratilipi.com/api',
-		GCP_ENDPOINT: 'https://devo-pratilipi.appspot.com/api',
+		GCP_ENDPOINT: 'https://devo-pratilipi.appspot.com',
 		REDIS: {
 			HOST: 'localhost',
 			PORT: 6379,
@@ -12,7 +12,7 @@ const StageConfig = {
 	},
 	devo: {
 		ECS_ENDPOINT: process.env.API_END_POINT,
-		GCP_ENDPOINT: 'https://devo-pratilipi.appspot.com/api',
+		GCP_ENDPOINT: 'https://devo-pratilipi.appspot.com',
 		REDIS: {
 			HOST: 'devo-ecs.e6ocw5.0001.apse1.cache.amazonaws.com',
 			PORT: 8080,
@@ -23,7 +23,7 @@ const StageConfig = {
 	},
 	gamma: {
 		ECS_ENDPOINT: process.env.API_END_POINT,
-		GCP_ENDPOINT: 'https://gae-gamma.pratilipi.com/api',
+		GCP_ENDPOINT: 'https://gae-gamma.pratilipi.com',
 		REDIS: {
 			HOST: 'prod-ecs.cpzshl.ng.0001.apse1.cache.amazonaws.com',
 			PORT: 8080,
@@ -34,7 +34,7 @@ const StageConfig = {
 	},
 	prod: {
 		ECS_ENDPOINT: process.env.API_END_POINT,
-		GCP_ENDPOINT: 'https://gae-prod.pratilipi.com/api',
+		GCP_ENDPOINT: 'https://gae-prod.pratilipi.com',
 		REDIS: {
 			HOST: 'prod-ecs.cpzshl.ng.0001.apse1.cache.amazonaws.com',
 			PORT: 8080,
