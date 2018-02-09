@@ -9,7 +9,6 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "testelb": "node test.js",
     "server": "node server.js",
     "worker": "node worker.js"
   },
@@ -25,8 +24,6 @@
     "querystring": "^0.2.0",
     "redis": "^2.8.0",
     "request": "^2.81.0",
-    "request-promise": "^4.2.2",
-    "sleep": "^5.1.1",
-    "toobusy-js": "^0.5.1"
+    "request-promise": "^4.2.2"
   }
 }

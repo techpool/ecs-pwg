@@ -2,8 +2,7 @@
 const
     express = require('express'),
     morgan = require('morgan'),
-    cookieParser = require('cookie-parser'),
-    compression = require('compression');
+    cookieParser = require('cookie-parser');
 
 // Stage, Stack and Version
 const
@@ -13,33 +12,48 @@ const
 
 // Filters - Declare it here, and use it henceforth (performance improvisation)
 const
+    accessTokenFilter = require('./filter/accessToken'),
     hostRedirectionFilter = require('./filter/hostRedirection'),
     pathRedirectionFilter = require('./filter/pathRedirection'),
-    crawlerFilter = require('./filter/crawler'),
-    internalStatsFilter = require('./filter/internalStats'),
-    accessTokenFilter = require('./filter/accessToken'),
+    resourceFilter = require('./filter/resource'),
     bucketFilter = require('./filter/bucket'),
     versionFilter= require('./filter/version'),
     stackFilter = require('./filter/stack');
+
+// Routers
+const
+    internalStatsRouter = require('./router/internalStats'),
+    pocRouter = require('./router/poc'),
+    crawlerRouter = require('./router/crawler');
 
 // Utils
 const
     pipeUtil = require('./util/common/pipe');
 
 
-
 // Prototype declarations
 String.prototype.count = function(s1) { return (this.length - this.replace(new RegExp(s1,"g"), '').length)/s1.length };
 String.prototype.contains = function (str, startIndex) { return -1 !== String.prototype.indexOf.call(this, str, startIndex) };
 String.prototype.equalsIgnoreCase = function(str) { return this.toUpperCase() === str.toUpperCase() };
-String.prototype.isStaticFileRequest = function () { const staticFileExts = [".html", ".css", ".js", ".ico", ".png", ".svg", ".jpg", ".jpeg", ".json"]; for (let i = 0; i < staticFileExts.length; i++) if (this && this.endsWith(staticFileExts[i])) return true; return false; };
+String.prototype.isStaticFileRequest = function () { const staticFileExts = [".html", ".css", ".js", ".ico", ".png", ".svg", ".jpg", ".jpeg", ".json", ".map"]; for (let i = 0; i < staticFileExts.length; i++) if (this && this.endsWith(staticFileExts[i])) return true; return false; };
 
 // Express App
 const app = express();
 
-// gzip all responses
-app.use(compression());
+// Health check For Ecs
+app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 
+// Internal developers
+app.use('/internal/stats', internalStatsRouter);
+
+// Poc
+if (stage === 'local' || stage === 'devo') app.use('/poc', pocRouter);
+
+// Crawlers
+app.use(crawlerRouter);
+
+
+// Users
 // trust proxy
 app.enable('trust proxy');
 
@@ -49,94 +63,18 @@ app.use(morgan("short"));
 // cookies
 app.use(cookieParser());
 
-// Health check
-app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
-
-// Middleware which blocks requests when we're too busy 
-/*
-const toobusy = require('toobusy-js');
-app.use((req, res, next) => {
-    if (toobusy()) {
-        return res.send(503, "I'm busy right now, sorry.");
-    } else {
-        return next();
-    }
-});
-*/
-
-/*
-// Test app
-const sleep = require('sleep');
-app.get('/app/test', (req, res, next) => {
-    const seconds = req.query.seconds ? parseInt(req.query.seconds) : null;
-    if (seconds && !isNaN(seconds) && seconds > 0 && seconds <= 100) {
-        if (req.query.behaviour === 'sync') {
-            sleep.sleep(seconds);
-            return res.json({message: `Hi! I slept for ${seconds} seconds. And I did block nodejs event loop.`});
-        } else if (req.query.behaviour === 'async') {
-            setTimeout(() => res.json({message: `Yo! I slept for ${seconds} seconds without blocking nodejs event loop.`}) , seconds*1000);
-        } else {
-            return res.json({message: 'I did nothing. Specify behaviour to be sync / async for me please :)'});
-        }
-    } else {
-        return res.json({message: 'Yaay! I did nothing!'});
-    }
-});
-*/
-
-/*
-// Test worker
-// redis client
-const redis = require('./util/common/redis')['client'];
-app.get('/worker/test', async(req, res, next) => {
-
-    // accessToken, bucketId
-    const accessToken = Math.random().toString(36).substring(7) + Date.now(),
-            bucketId = 0;
-
-    // Debug Logs
-    console.log(`TEST :: /worker/test :: ${accessToken} :: ${req.headers.host} :: ${bucketId}`);
-
-    // Data
-    const data = {
-        accessToken: accessToken,
-        host: req.headers.host,
-        bucketId: bucketId,
-        dateToExpire: Date.now()
-    };
-
-    // Setting original key
-    await redis.setAsync(`key|${accessToken}|${req.headers.host}`, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SET_FAIL :: ${accessToken}`));
-
-    // Setting shadow key - 10 seconds expiry
-    await redis.setexAsync(`shadow|${accessToken}|${req.headers.host}`, 10, JSON.stringify(data)).catch(() => console.error(`ERROR :: REDIS_SETEX_FAIL :: ${accessToken}`));
-
-    // Setting Bucket Pool
-    await redis.saddAsync(`bucket|${bucketId}|${req.headers.host}`, accessToken).catch(() => console.error(`ERROR :: REDIS_SADD_FAIL :: ${accessToken}`));
-
-    // Returning response
-    return res.json({message: 'OK'});
-
-});
-*/
-
 // Disabling all post, patch and delete
 app.post('*', (req, res, next) => res.status(400).json({message: 'Huh! Nice try!'}));
 app.patch('*', (req, res, next) => res.status(400).json({message: 'Aww! That was cute!'}));
 app.delete('*', (req, res, next) => res.status(400).json({message: 'Noooooooooooooooooo!'}));
 
+// AccessToken Filter
+app.use(accessTokenFilter);
+
 // Redirection Filter(s)
 app.use(hostRedirectionFilter);
 app.use(pathRedirectionFilter);
-
-// Crawler Filter
-app.use(crawlerFilter);
-
-// Internal developers only
-app.use('/internal/stats', internalStatsFilter);
-
-// AccessToken Filter
-app.use(accessTokenFilter);
+app.use(resourceFilter);
 
 // Bucket Filter
 app.use(bucketFilter);
@@ -156,14 +94,12 @@ res.locals:
     stack = growth / product
 */
 
-// Logging
-app.use((req, res, next) => {
-    console.log(`DEBUG :: ${decodeURIComponent(req.originalUrl)} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
-    next();
-});
 
 // Pipe request to response
 app.get('*', (req, res, next) => {
+
+    // Logging
+    console.log(`DEBUG :: ${decodeURIComponent(req.originalUrl)} :: ${req.headers['user-agent']} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['total-growth-buckets']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
 
     // Local Environment - Send the data
     if (stage === 'local') {

@@ -19,17 +19,13 @@ router.get('/stats', async(req, res, next) => res.status(200).json(await dataAcc
 // Check bucket stats of a particular bucket
 router.get('/bucket/:bucketId', async(req, res, next) => res.status(200).json(await dataAccessor.getBucket(parseInt(req.params.bucketId), req.headers.host)));
 
-// Only for delete
-router.use((req, res, next) => {
+// Delete All Data
+router.get('/lets_agree_to_disagree', async(req, res, next) =>  {
 	// TODO: AccessToken check
 	if (stage === 'gamma' || stage === 'prod')
 		return next('router');
-	return next();
+	return res.status(200).json({message: await dataAccessor.clearDb()});
 });
-
-
-// Delete All Data
-router.get('/lets_agree_to_disagree', async(req, res, next) => res.status(200).json({message: await dataAccessor.clearDb()}));
 
 
 module.exports = router;

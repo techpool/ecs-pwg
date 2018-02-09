@@ -1,3 +1,6 @@
+const
+    Language = require('./../enum/language');
+
 const 
     Version = require('./../enum/version'),
     stageConfig = require('./stage');
@@ -6,6 +9,7 @@ const HostConfig = {
 
     // production - chrome
     "www.pratilipi.com": {
+        LANGUAGE: Language.ENGLISH,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -15,6 +19,7 @@ const HostConfig = {
     },
 
     "hindi.pratilipi.com": {
+        LANGUAGE: Language.HINDI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -24,6 +29,7 @@ const HostConfig = {
     },
 
     "gujarati.pratilipi.com": {
+        LANGUAGE: Language.GUJARATI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -33,6 +39,7 @@ const HostConfig = {
     },
 
     "bengali.pratilipi.com": {
+        LANGUAGE: Language.BENGALI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -42,6 +49,7 @@ const HostConfig = {
     },
 
     "marathi.pratilipi.com": {
+        LANGUAGE: Language.MARATHI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -51,6 +59,7 @@ const HostConfig = {
     },
 
     "tamil.pratilipi.com": {
+        LANGUAGE: Language.TAMIL,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -60,6 +69,7 @@ const HostConfig = {
     },
 
     "telugu.pratilipi.com": {
+        LANGUAGE: Language.TELUGU,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -69,6 +79,7 @@ const HostConfig = {
     },
 
     "kannada.pratilipi.com": {
+        LANGUAGE: Language.KANNADA,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -78,6 +89,7 @@ const HostConfig = {
     },
 
     "malayalam.pratilipi.com": {
+        LANGUAGE: Language.MALAYALAM,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -89,6 +101,7 @@ const HostConfig = {
 
     // production - uc mini
     "m.pratilipi.com": {
+        LANGUAGE: Language.ENGLISH,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -98,6 +111,7 @@ const HostConfig = {
     },
 
     "hi.pratilipi.com": {
+        LANGUAGE: Language.HINDI,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -107,6 +121,7 @@ const HostConfig = {
     },
 
     "gu.pratilipi.com": {
+        LANGUAGE: Language.GUJARATI,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -116,6 +131,7 @@ const HostConfig = {
     },
 
     "bn.pratilipi.com": {
+        LANGUAGE: Language.BENGALI,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -125,6 +141,7 @@ const HostConfig = {
     },
 
     "mr.pratilipi.com": {
+        LANGUAGE: Language.MARATHI,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -134,6 +151,7 @@ const HostConfig = {
     },
 
     "ta.pratilipi.com": {
+        LANGUAGE: Language.TAMIL,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -143,6 +161,7 @@ const HostConfig = {
     },
 
     "te.pratilipi.com": {
+        LANGUAGE: Language.TELUGU,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -152,6 +171,7 @@ const HostConfig = {
     },
 
     "kn.pratilipi.com": {
+        LANGUAGE: Language.KANNADA,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -161,6 +181,7 @@ const HostConfig = {
     },
 
     "ml.pratilipi.com": {
+        LANGUAGE: Language.MALAYALAM,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -172,6 +193,7 @@ const HostConfig = {
 
     // gamma - product - chrome
     "www-gamma.pratilipi.com": {
+        LANGUAGE: Language.ENGLISH,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -181,6 +203,7 @@ const HostConfig = {
     },
 
     "hindi-gamma.pratilipi.com": {
+        LANGUAGE: Language.HINDI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -190,6 +213,7 @@ const HostConfig = {
     },
 
     "gujarati-gamma.pratilipi.com": {
+        LANGUAGE: Language.GUJARATI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -199,6 +223,7 @@ const HostConfig = {
     },
 
     "bengali-gamma.pratilipi.com": {
+        LANGUAGE: Language.BENGALI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -208,6 +233,7 @@ const HostConfig = {
     },
 
     "marathi-gamma.pratilipi.com": {
+        LANGUAGE: Language.MARATHI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -217,6 +243,7 @@ const HostConfig = {
     },
 
     "tamil-gamma.pratilipi.com": {
+        LANGUAGE: Language.TAMIL,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -226,6 +253,7 @@ const HostConfig = {
     },
 
     "telugu-gamma.pratilipi.com": {
+        LANGUAGE: Language.TELUGU,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -235,6 +263,7 @@ const HostConfig = {
     },
 
     "kannada-gamma.pratilipi.com": {
+        LANGUAGE: Language.KANNADA,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -244,6 +273,7 @@ const HostConfig = {
     },
 
     "malayalam-gamma.pratilipi.com": {
+        LANGUAGE: Language.MALAYALAM,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -255,6 +285,7 @@ const HostConfig = {
 
     // gamma - product - uc mini
     "m-gamma.pratilipi.com": {
+        LANGUAGE: Language.ENGLISH,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -264,6 +295,7 @@ const HostConfig = {
     },
 
     "hi-gamma.pratilipi.com": {
+        LANGUAGE: Language.HINDI,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -273,6 +305,7 @@ const HostConfig = {
     },
 
     "gu-gamma.pratilipi.com": {
+        LANGUAGE: Language.GUJARATI,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -282,6 +315,7 @@ const HostConfig = {
     },
 
     "bn-gamma.pratilipi.com": {
+        LANGUAGE: Language.BENGALI,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -291,6 +325,7 @@ const HostConfig = {
     },
 
     "mr-gamma.pratilipi.com": {
+        LANGUAGE: Language.MARATHI,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -300,6 +335,7 @@ const HostConfig = {
     },
 
     "ta-gamma.pratilipi.com": {
+        LANGUAGE: Language.TAMIL,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -309,6 +345,7 @@ const HostConfig = {
     },
 
     "te-gamma.pratilipi.com": {
+        LANGUAGE: Language.TELUGU,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -318,6 +355,7 @@ const HostConfig = {
     },
 
     "kn-gamma.pratilipi.com": {
+        LANGUAGE: Language.KANNADA,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -327,6 +365,7 @@ const HostConfig = {
     },
 
     "ml-gamma.pratilipi.com": {
+        LANGUAGE: Language.MALAYALAM,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -338,80 +377,89 @@ const HostConfig = {
 
     // gamma - growth - chrome
     "hindi-gamma-gr.pratilipi.com": {
+        LANGUAGE: Language.HINDI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
-            TOTAL: 1,
-            GROWTH: 1
+            TOTAL: 100,
+            GROWTH: 20
         }
     },
 
     "gujarati-gamma-gr.pratilipi.com": {
+        LANGUAGE: Language.GUJARATI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
-            TOTAL: 1,
-            GROWTH: 1
+            TOTAL: 100,
+            GROWTH: 20
         }
     },
 
     "bengali-gamma-gr.pratilipi.com": {
+        LANGUAGE: Language.BENGALI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
-            TOTAL: 1,
-            GROWTH: 1
+            TOTAL: 100,
+            GROWTH: 20
         }
     },
 
     "marathi-gamma-gr.pratilipi.com": {
+        LANGUAGE: Language.MARATHI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
-            TOTAL: 1,
-            GROWTH: 1
+            TOTAL: 100,
+            GROWTH: 20
         }
     },
 
     "tamil-gamma-gr.pratilipi.com": {
+        LANGUAGE: Language.TAMIL,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
-            TOTAL: 1,
-            GROWTH: 1
+            TOTAL: 100,
+            GROWTH: 20
         }
     },
 
     "telugu-gamma-gr.pratilipi.com": {
+        LANGUAGE: Language.TELUGU,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
-            TOTAL: 1,
-            GROWTH: 1
+            TOTAL: 100,
+            GROWTH: 20
         }
     },
 
     "kannada-gamma-gr.pratilipi.com": {
+        LANGUAGE: Language.KANNADA,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
-            TOTAL: 1,
-            GROWTH: 1
+            TOTAL: 100,
+            GROWTH: 20
         }
     },
 
     "malayalam-gamma-gr.pratilipi.com": {
+        LANGUAGE: Language.MALAYALAM,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
-            TOTAL: 1,
-            GROWTH: 1
+            TOTAL: 100,
+            GROWTH: 20
         }
     },
 
 
     // devo - product - chrome
     "www-devo.ptlp.co": {
+        LANGUAGE: Language.ENGLISH,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -421,6 +469,7 @@ const HostConfig = {
     },
 
     "hindi-devo.ptlp.co": {
+        LANGUAGE: Language.HINDI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -430,6 +479,7 @@ const HostConfig = {
     },
 
     "gujarati-devo.ptlp.co": {
+        LANGUAGE: Language.GUJARATI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -439,6 +489,7 @@ const HostConfig = {
     },
 
     "bengali-devo.ptlp.co": {
+        LANGUAGE: Language.BENGALI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -448,6 +499,7 @@ const HostConfig = {
     },
     
     "marathi-devo.ptlp.co": {
+        LANGUAGE: Language.MARATHI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -457,6 +509,7 @@ const HostConfig = {
     },
 
     "tamil-devo.ptlp.co": {
+        LANGUAGE: Language.TAMIL,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -466,6 +519,7 @@ const HostConfig = {
     },
 
     "telugu-devo.ptlp.co": {
+        LANGUAGE: Language.TELUGU,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -475,6 +529,7 @@ const HostConfig = {
     },
 
     "kannada-devo.ptlp.co": {
+        LANGUAGE: Language.KANNADA,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -484,6 +539,7 @@ const HostConfig = {
     },
 
     "malayalam-devo.ptlp.co": {
+        LANGUAGE: Language.MALAYALAM,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -496,6 +552,7 @@ const HostConfig = {
 
     // devo - product - uc mini
     "m-devo.ptlp.co": {
+        LANGUAGE: Language.ENGLISH,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -505,6 +562,7 @@ const HostConfig = {
     },
 
     "hi-devo.ptlp.co": {
+        LANGUAGE: Language.HINDI,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -514,6 +572,7 @@ const HostConfig = {
     },
 
     "gu-devo.ptlp.co": {
+        LANGUAGE: Language.GUJARATI,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -523,6 +582,7 @@ const HostConfig = {
     },
 
     "bn-devo.ptlp.co": {
+        LANGUAGE: Language.BENGALI,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -532,6 +592,7 @@ const HostConfig = {
     },
 
     "mr-devo.ptlp.co": {
+        LANGUAGE: Language.MARATHI,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -541,6 +602,7 @@ const HostConfig = {
     },
     
     "ta-devo.ptlp.co": {
+        LANGUAGE: Language.TAMIL,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -550,6 +612,7 @@ const HostConfig = {
     },
 
     "te-devo.ptlp.co": {
+        LANGUAGE: Language.TELUGU,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -559,6 +622,7 @@ const HostConfig = {
     },
 
     "kn-devo.ptlp.co": {
+        LANGUAGE: Language.KANNADA,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -568,6 +632,7 @@ const HostConfig = {
     },
 
     "ml-devo.ptlp.co": {
+        LANGUAGE: Language.MALAYALAM,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
         BUCKET: {
@@ -580,6 +645,7 @@ const HostConfig = {
 
     // devo - growth - chrome
     "hindi-devo-gr.ptlp.co": {
+        LANGUAGE: Language.HINDI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -589,6 +655,7 @@ const HostConfig = {
     },
 
     "gujarati-devo-gr.ptlp.co": {
+        LANGUAGE: Language.GUJARATI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -598,6 +665,7 @@ const HostConfig = {
     },
 
     "bengali-devo-gr.ptlp.co": {
+        LANGUAGE: Language.BENGALI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -607,6 +675,7 @@ const HostConfig = {
     },
 
     "marathi-devo-gr.ptlp.co": {
+        LANGUAGE: Language.MARATHI,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -616,6 +685,7 @@ const HostConfig = {
     },
 
     "tamil-devo-gr.ptlp.co": {
+        LANGUAGE: Language.TAMIL,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -625,6 +695,7 @@ const HostConfig = {
     },
 
     "telugu-devo-gr.ptlp.co": {
+        LANGUAGE: Language.TELUGU,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -634,6 +705,7 @@ const HostConfig = {
     },
 
     "kannada-devo-gr.ptlp.co": {
+        LANGUAGE: Language.KANNADA,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -643,6 +715,7 @@ const HostConfig = {
     },
 
     "malayalam-devo-gr.ptlp.co": {
+        LANGUAGE: Language.MALAYALAM,
         VERSION: Version.PWA,
         TTL_DAYS: 7,
         BUCKET: {
@@ -654,6 +727,7 @@ const HostConfig = {
 
     // local testing
     [`localhost:${stageConfig.PORT}`]: {
+        LANGUAGE: Language.ENGLISH,
         VERSION: Version.PWA,
         TTL_DAYS: 1,
         BUCKET: {
