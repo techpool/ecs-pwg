@@ -11,18 +11,36 @@ const
     hostConfig = require('./../config/host');
 
 const
+	Version = require('./../enum/version');
+
+const
     _getSlugFromPath = (path) => path.split('/').pop().split('-').pop(),
     _isPathEqualSlug = (path, slug) => decodeURIComponent(path) === slug;
 
-const _getHostName = (language) => {
-    if (stage === 'local')
+const _getHostName = (language, host) => {
+	if (stage === 'local')
         return `localhost:${stageConfig.PORT}`;
+	const langMap = {
+		'hindi': 'hi',
+		'gujarati': 'gu',
+		'marathi': 'mr',
+		'bengali': 'bn',
+		'tamil': 'ta',
+		'telugu': 'te',
+		'kannada': 'kn',
+		'malayalam': 'ml'
+	};
+	let newHost;
+	if (hostConfig[host].VERSION === Version.PWA)
+		newHost = language.toLowerCase();
+	else if (hostConfig[host].VERSION === Version.MINI)
+		newHost = langMap[language.toLowerCase()];
     if (stage === 'devo')
-        return `${language.toLowerCase()}-devo${stageConfig.DOMAIN}`;
+        return `${newHost}-devo${stageConfig.DOMAIN}`;
     if (stage === 'gamma')
-        return `${language.toLowerCase()}-gamma${stageConfig.DOMAIN}`;
+        return `${newHost}-gamma${stageConfig.DOMAIN}`;
     if (stage === 'prod')
-        return `${language.toLowerCase()}${stageConfig.DOMAIN}`;
+        return `${newHost}${stageConfig.DOMAIN}`;
 };
 
 
@@ -42,7 +60,7 @@ router.use(async(req, res, next) => {
 		if (author && author.slug && author.language) {
 			if (_isPathEqualSlug(req.path, author.slug) && hostConfig[req.headers.host].LANGUAGE === author.language)
 				return next('router'); // valid path
-			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(author.language) + req.originalUrl.replace(req.path, author.slug));
+			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(author.language, req.headers.host) + req.originalUrl.replace(req.path, author.slug));
 		}
 	}
 	next();
@@ -55,7 +73,7 @@ router.use(async(req, res, next) => {
 		if (pratilipi && pratilipi.pageUrl && pratilipi.language) {
 			if (_isPathEqualSlug(req.path, pratilipi.pageUrl) && hostConfig[req.headers.host].LANGUAGE === pratilipi.language)
 				return next('router'); // valid path
-			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(pratilipi.language) + req.originalUrl.replace(req.path, pratilipi.pageUrl));
+			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(pratilipi.language, req.headers.host) + req.originalUrl.replace(req.path, pratilipi.pageUrl));
 		}
 	}
 	next();
@@ -68,7 +86,7 @@ router.use(async(req, res, next) => {
 		if (event && event.slug && event.language) {
 			if (_isPathEqualSlug(req.path, event.slug) && hostConfig[req.headers.host].LANGUAGE === event.language)
 				return next('router'); // valid path
-			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(event.language) + req.originalUrl.replace(req.path, event.slug));
+			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(event.language, req.headers.host) + req.originalUrl.replace(req.path, event.slug));
 		}
 	}
 	next();
@@ -143,7 +161,7 @@ router.use(async(req, res, next) => {
 	}
 
 	if (language && slug)
-		return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(language) + req.originalUrl.replace(req.path, slug));
+		return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(language, req.headers.host) + req.originalUrl.replace(req.path, slug));
 
 	next();
 
