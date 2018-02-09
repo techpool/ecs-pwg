@@ -1,0 +1,152 @@
+const
+	express = require('express'),
+	router = express.Router();
+
+const
+	dataAccessor = require('./../data/dataAccessor');
+
+const 
+    stage = process.env.STAGE || 'local',
+    stageConfig = require('./../config/stage'),
+    hostConfig = require('./../config/host');
+
+const
+    _getSlugFromPath = (path) => path.split('/').pop().split('-').pop(),
+    _isPathEqualSlug = (path, slug) => decodeURIComponent(path) === slug;
+
+const _getHostName = (language) => {
+    if (stage === 'local')
+        return `localhost:${stageConfig.PORT}`;
+    if (stage === 'devo')
+        return `${language.toLowerCase()}-devo${stageConfig.DOMAIN}`;
+    if (stage === 'gamma')
+        return `${language.toLowerCase()}-gamma${stageConfig.DOMAIN}`;
+    if (stage === 'prod')
+        return `${language.toLowerCase()}${stageConfig.DOMAIN}`;
+};
+
+
+//// Slug Redirections
+
+// Skip for static file requests
+router.use((req, res, next) => {
+	if (req.path.isStaticFileRequest())
+		return next('router');
+	next();
+});
+
+// Author Slug redirection
+router.use(async(req, res, next) => {
+	if (req.path.startsWith('/user/') && req.path.count('/') === 2) {
+		const author = await dataAccessor.getAuthorBySlug(req.headers.host, _getSlugFromPath(req.path), res.locals['access-token']).catch(() => null);
+		if (author && author.slug && author.language) {
+			if (_isPathEqualSlug(req.path, author.slug) && hostConfig[req.headers.host].LANGUAGE === author.language)
+				return next('router'); // valid path
+			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(author.language) + req.originalUrl.replace(req.path, author.slug));
+		}
+	}
+	next();
+});
+
+// Pratilipi Slug Redirections
+router.use(async(req, res, next) => {
+	if (req.path.startsWith('/story/') && req.path.count('/') === 2) {
+        const pratilipi = await dataAccessor.getPratilipiBySlug(req.headers.host, _getSlugFromPath(req.path), res.locals['access-token']).catch(() => null);
+		if (pratilipi && pratilipi.pageUrl && pratilipi.language) {
+			if (_isPathEqualSlug(req.path, pratilipi.pageUrl) && hostConfig[req.headers.host].LANGUAGE === pratilipi.language)
+				return next('router'); // valid path
+			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(pratilipi.language) + req.originalUrl.replace(req.path, pratilipi.pageUrl));
+		}
+	}
+	next();
+});
+
+// Event Slug Redirections
+router.use(async(req, res, next) => {
+	if (req.path.startsWith('/event/') && req.path.count('/') === 2) {
+		const event = await dataAccessor.getEventBySlug(req.headers.host, _getSlugFromPath(req.path), res.locals['access-token']).catch(() => null);
+		if (event && event.slug && event.language) {
+			if (_isPathEqualSlug(req.path, event.slug) && hostConfig[req.headers.host].LANGUAGE === event.language)
+				return next('router'); // valid path
+			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(event.language) + req.originalUrl.replace(req.path, event.slug));
+		}
+	}
+	next();
+});
+
+//// Page Redirections
+router.use(async(req, res, next) => {
+	const hardcodedUrlList = [
+		'/',
+		'/read',
+		'/write',
+		'/pratilipi-write',
+		'/navigation',
+		'/library',
+		'/notifications',
+		'/search',
+		'/event',
+		'/followers',
+		'/following',
+		'/updatepassword',
+		'/share',
+		'/account',
+		'/register',
+		'/login',
+		'/forgot-password',
+		'/admin',
+		'/admin/authors',
+		'/admin/batch-process',
+		'/admin/email-templates',
+		'/admin/translations',
+		'/edit-event',
+		'/edit-blog',
+		'/sitemap',
+		'/pratilipi-2016',
+		'/books',
+		'/stories',
+		'/poems',
+		'/articles',
+		'/magazines',
+		'/short-stories',
+		'/poetry',
+		'/non-fiction'
+	];
+
+	if (hardcodedUrlList.indexOf(req.path) >= 0)
+		return next('router');
+
+	// Backward compatibility - hit page service
+	const page = await dataAccessor.getPage(req.headers.host, req.path, res.locals['access-token']).catch(() => null);
+
+	if (page == null)
+		return next('router');
+
+	// If got response, with type, PRATILIPI, AUTHOR, , -> Hit services metadata with id and redirect to slug
+	let language, slug;
+	switch (page.pageType) {
+		case 'PRATILIPI':
+            const pratilipi = await dataAccessor.getPratilipiById(req.headers.host, page.primaryContentId, res.locals['access-token']).catch(() => null);
+            language = pratilipi && pratilipi.language;
+			slug = pratilipi && pratilipi.pageUrl;
+			break;
+		case 'AUTHOR':
+            const author = await dataAccessor.getAuthorById(req.headers.host, page.primaryContentId, res.locals['access-token']).catch(() => null);
+            language = author && author.language;
+			slug = author && author.slug;
+			break;
+		case 'EVENT':
+            const event = await dataAccessor.getEventById(req.headers.host, page.primaryContentId, res.locals['access-token']).catch(() => null);
+            language = event && event.language;
+			slug = event && event.pageUrl;
+			break;
+	}
+
+	if (language && slug)
+		return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(language) + req.originalUrl.replace(req.path, slug));
+
+	next();
+
+});
+
+module.exports = router;
