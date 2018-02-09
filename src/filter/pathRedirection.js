@@ -57,7 +57,7 @@ router.use((req, res, next) => {
 // Author Slug redirection
 router.use(async(req, res, next) => {
 	if (req.path.startsWith('/user/') && req.path.count('/') === 2) {
-		const author = await dataAccessor.getAuthorBySlug(req.headers.host, _getSlugFromPath(req.path)).catch(() => null);
+		const author = await dataAccessor.getAuthorBySlug(req.headers.host, _getSlugFromPath(req.path), res.locals['access-token']).catch(() => null);
 		if (author && author.slug) {
 			if (_isPathEqualSlug(req.path, author.slug))
 				return next('router'); // valid path
@@ -70,7 +70,7 @@ router.use(async(req, res, next) => {
 // Pratilipi Slug Redirections
 router.use(async(req, res, next) => {
 	if (req.path.startsWith('/story/') && req.path.count('/') === 2) {
-		const pratilipi = await dataAccessor.getPratilipiBySlug(req.headers.host, _getSlugFromPath(req.path)).catch(() => null);
+		const pratilipi = await dataAccessor.getPratilipiBySlug(req.headers.host, _getSlugFromPath(req.path), res.locals['access-token']).catch(() => null);
 		if (pratilipi && pratilipi.pageUrl) {
 			if (_isPathEqualSlug(req.path, pratilipi.pageUrl))
 				return next('router'); // valid path
@@ -83,7 +83,7 @@ router.use(async(req, res, next) => {
 // Event Slug Redirections
 router.use(async(req, res, next) => {
 	if (req.path.startsWith('/event/') && req.path.count('/') === 2) {
-		const event = await dataAccessor.getEventBySlug(req.headers.host, _getSlugFromPath(req.path)).catch(() => null);
+		const event = await dataAccessor.getEventBySlug(req.headers.host, _getSlugFromPath(req.path), res.locals['access-token']).catch(() => null);
 		if (event && event.slug) {
 			if (_isPathEqualSlug(req.path, event.slug))
 				return next('router'); // valid path
@@ -136,7 +136,7 @@ router.use(async(req, res, next) => {
 		return next('router');
 
 	// Backward compatibility - hit page service
-	const page = await dataAccessor.getPage(req.headers.host, req.path).catch(() => null);
+	const page = await dataAccessor.getPage(req.headers.host, req.path, res.locals['access-token']).catch(() => null);
 
 	if (page == null)
 		return next('router');
@@ -145,15 +145,15 @@ router.use(async(req, res, next) => {
 	let resource, slug;
 	switch (page.pageType) {
 		case 'PRATILIPI':
-			resource = await dataAccessor.getPratilipiById(req.headers.host, page.primaryContentId).catch(() => null);
+			resource = await dataAccessor.getPratilipiById(req.headers.host, page.primaryContentId, res.locals['access-token']).catch(() => null);
 			slug = resource && resource.pageUrl;
 			break;
 		case 'AUTHOR':
-			resource = await dataAccessor.getAuthorById(req.headers.host, page.primaryContentId).catch(() => null);
+			resource = await dataAccessor.getAuthorById(req.headers.host, page.primaryContentId, res.locals['access-token']).catch(() => null);
 			slug = resource && resource.slug;
 			break;
 		case 'EVENT':
-			resource = await dataAccessor.getEventById(req.headers.host, page.primaryContentId).catch(() => null);
+			resource = await dataAccessor.getEventById(req.headers.host, page.primaryContentId, res.locals['access-token']).catch(() => null);
 			slug = resource && resource.pageUrl;
 			break;
 	}

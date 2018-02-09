@@ -1,3 +1,4 @@
+const stageConfig = require('./../../config/stage');
 const httpUtil = require('./../../util/common/http');
 
 const _convert2V2 = (accessToken) => ({
@@ -14,7 +15,7 @@ const UserServiceUtil = function() {
 	// else a new access token is created and returned.
 	this.validateAccessToken = (host, accessToken, userAgent) => {
 		// localhost testing
-		if (host.split(':')[0] === 'localhost') host = 'hindi-devo.ptlp.co';
+		if (host.split(':')[0] === 'localhost') host = stageConfig.ECS_ENDPOINT.substr('https://'.length); host = host.substr(0, host.length - 4);
 		let headers = {};
 		if (accessToken) {
 			headers['Access-Token'] = accessToken;

@@ -103,8 +103,8 @@ router.use((req, res, next) => {
     const bucketId = res.locals["bucket-id"],
         dateToExpire = res.locals["_bucket-dateToExpire"] || (Date.now() + 86400000); // default - 1 day
 
-    // TODO: Remove Debug log asap
-    console.log(`DEBUG :: SET_COOKIE :: bucket_id :: ${bucketId} :: ${req.path}`);
+    // Uncomment for Debugging
+    // console.log(`DEBUG :: SET_COOKIE :: bucket_id :: ${bucketId} :: ${req.path}`);
 
     // bucketId in string -> cookies doesn't consider 0 in integer
     res.cookie('bucket_id', bucketId + '', {

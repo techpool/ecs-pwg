@@ -2,8 +2,7 @@
 const
     express = require('express'),
     morgan = require('morgan'),
-    cookieParser = require('cookie-parser'),
-    compression = require('compression');
+    cookieParser = require('cookie-parser');
 
 // Stage, Stack and Version
 const
@@ -13,33 +12,47 @@ const
 
 // Filters - Declare it here, and use it henceforth (performance improvisation)
 const
+    accessTokenFilter = require('./filter/accessToken'),
     hostRedirectionFilter = require('./filter/hostRedirection'),
     pathRedirectionFilter = require('./filter/pathRedirection'),
-    crawlerFilter = require('./filter/crawler'),
-    internalStatsFilter = require('./filter/internalStats'),
-    accessTokenFilter = require('./filter/accessToken'),
     bucketFilter = require('./filter/bucket'),
     versionFilter= require('./filter/version'),
     stackFilter = require('./filter/stack');
+
+// Routers
+const
+    internalStatsRouter = require('./router/internalStats'),
+    pocRouter = require('./router/poc'),
+    crawlerRouter = require('./router/crawler');
 
 // Utils
 const
     pipeUtil = require('./util/common/pipe');
 
 
-
 // Prototype declarations
 String.prototype.count = function(s1) { return (this.length - this.replace(new RegExp(s1,"g"), '').length)/s1.length };
 String.prototype.contains = function (str, startIndex) { return -1 !== String.prototype.indexOf.call(this, str, startIndex) };
 String.prototype.equalsIgnoreCase = function(str) { return this.toUpperCase() === str.toUpperCase() };
-String.prototype.isStaticFileRequest = function () { const staticFileExts = [".html", ".css", ".js", ".ico", ".png", ".svg", ".jpg", ".jpeg", ".json"]; for (let i = 0; i < staticFileExts.length; i++) if (this && this.endsWith(staticFileExts[i])) return true; return false; };
+String.prototype.isStaticFileRequest = function () { const staticFileExts = [".html", ".css", ".js", ".ico", ".png", ".svg", ".jpg", ".jpeg", ".json", ".map"]; for (let i = 0; i < staticFileExts.length; i++) if (this && this.endsWith(staticFileExts[i])) return true; return false; };
 
 // Express App
 const app = express();
 
-// gzip all responses
-app.use(compression());
+// Health check For Ecs
+app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
 
+// Internal developers
+app.use('/internal/stats', internalStatsRouter);
+
+// Poc
+if (stage === 'local' || stage === 'devo') app.use('/poc', pocRouter);
+
+// Crawlers
+app.use(crawlerRouter);
+
+
+// Users
 // trust proxy
 app.enable('trust proxy');
 
@@ -49,26 +62,17 @@ app.use(morgan("short"));
 // cookies
 app.use(cookieParser());
 
-// Health check
-app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
-
 // Disabling all post, patch and delete
 app.post('*', (req, res, next) => res.status(400).json({message: 'Huh! Nice try!'}));
 app.patch('*', (req, res, next) => res.status(400).json({message: 'Aww! That was cute!'}));
 app.delete('*', (req, res, next) => res.status(400).json({message: 'Noooooooooooooooooo!'}));
 
+// AccessToken Filter
+app.use(accessTokenFilter);
+
 // Redirection Filter(s)
 app.use(hostRedirectionFilter);
 app.use(pathRedirectionFilter);
-
-// Crawler Filter
-app.use(crawlerFilter);
-
-// Internal developers only
-app.use('/internal/stats', internalStatsFilter);
-
-// AccessToken Filter
-app.use(accessTokenFilter);
 
 // Bucket Filter
 app.use(bucketFilter);
@@ -88,14 +92,12 @@ res.locals:
     stack = growth / product
 */
 
-// Logging
-app.use((req, res, next) => {
-    console.log(`DEBUG :: ${decodeURIComponent(req.originalUrl)} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['total-growth-buckets']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
-    next();
-});
 
 // Pipe request to response
 app.get('*', (req, res, next) => {
+
+    // Logging
+    console.log(`DEBUG :: ${decodeURIComponent(req.originalUrl)} :: ${req.headers['user-agent']} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['total-growth-buckets']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
 
     // Local Environment - Send the data
     if (stage === 'local') {
