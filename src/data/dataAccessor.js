@@ -129,25 +129,25 @@ DataAccessor.prototype.clearDb = async() => {
 DataAccessor.prototype.validateAccessToken = (host, accessToken, userAgent) =>
 	userServiceUtil.validateAccessToken(host, accessToken, userAgent);
 
-DataAccessor.prototype.getPage = (host, path) =>
-	pageService.getPage(host, path);
+DataAccessor.prototype.getPage = (host, path, accessToken) =>
+	pageService.getPage(host, path, accessToken);
 
-DataAccessor.prototype.getPratilipiBySlug = (host, slug) =>
-	pratilipiServiceUtil.getBySlug(host, slug);
+DataAccessor.prototype.getPratilipiBySlug = (host, slug, accessToken) =>
+	pratilipiServiceUtil.getBySlug(host, slug, accessToken);
 
-DataAccessor.prototype.getPratilipiById = (host, pratilipiId) =>
-	pratilipiServiceUtil.getById(host, pratilipiId);
+DataAccessor.prototype.getPratilipiById = (host, pratilipiId, accessToken) =>
+	pratilipiServiceUtil.getById(host, pratilipiId, accessToken);
 
-DataAccessor.prototype.getAuthorBySlug = (host, slug) =>
-	authorServiceUtil.getBySlug(host, slug);
+DataAccessor.prototype.getAuthorBySlug = (host, slug, accessToken) =>
+	authorServiceUtil.getBySlug(host, slug, accessToken);
 
-DataAccessor.prototype.getAuthorById = (host, authorId) =>
-	authorServiceUtil.getById(host, authorId);
+DataAccessor.prototype.getAuthorById = (host, authorId, accessToken) =>
+	authorServiceUtil.getById(host, authorId, accessToken);
 
-DataAccessor.prototype.getEventBySlug = (host, slug) =>
-	eventServiceUtil.getBySlug(host, slug);
+DataAccessor.prototype.getEventBySlug = (host, slug, accessToken) =>
+	eventServiceUtil.getBySlug(host, slug, accessToken);
 
-DataAccessor.prototype.getEventById = (host, eventId) =>
-	eventServiceUtil.getById(host, eventId);
+DataAccessor.prototype.getEventById = (host, eventId, accessToken) =>
+	eventServiceUtil.getById(host, eventId, accessToken);
 
 module.exports = new DataAccessor();

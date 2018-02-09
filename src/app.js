@@ -12,19 +12,22 @@ const
 
 // Filters - Declare it here, and use it henceforth (performance improvisation)
 const
+    accessTokenFilter = require('./filter/accessToken'),
     hostRedirectionFilter = require('./filter/hostRedirection'),
     pathRedirectionFilter = require('./filter/pathRedirection'),
-    crawlerFilter = require('./filter/crawler'),
-    internalStatsFilter = require('./filter/internalStats'),
-    accessTokenFilter = require('./filter/accessToken'),
     bucketFilter = require('./filter/bucket'),
     versionFilter= require('./filter/version'),
     stackFilter = require('./filter/stack');
 
+// Routers
+const
+    internalStatsRouter = require('./router/internalStats'),
+    pocRouter = require('./router/poc'),
+    crawlerRouter = require('./router/crawler');
+
 // Utils
 const
     pipeUtil = require('./util/common/pipe');
-
 
 
 // Prototype declarations
@@ -36,6 +39,20 @@ String.prototype.isStaticFileRequest = function () { const staticFileExts = [".h
 // Express App
 const app = express();
 
+// Health check For Ecs
+app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
+
+// Internal developers
+app.use('/internal/stats', internalStatsRouter);
+
+// Poc
+if (stage === 'local' || stage === 'devo') app.use('/poc', pocRouter);
+
+// Crawlers
+app.use(crawlerRouter);
+
+
+// Users
 // trust proxy
 app.enable('trust proxy');
 
@@ -45,78 +62,17 @@ app.use(morgan("short"));
 // cookies
 app.use(cookieParser());
 
-// Health check
-app.get('/health', (req, res, next) => res.status(200).send('Hi! Bye!'));
-
 // Disabling all post, patch and delete
 app.post('*', (req, res, next) => res.status(400).json({message: 'Huh! Nice try!'}));
 app.patch('*', (req, res, next) => res.status(400).json({message: 'Aww! That was cute!'}));
 app.delete('*', (req, res, next) => res.status(400).json({message: 'Noooooooooooooooooo!'}));
 
-
-
-/* ----------------------- POC ----------------------- */
-app.get('/poc1', (req, res, next) => {
-	let len = req.query.len ? parseInt(req.query.len) : 1;
-	if (len > 1000000) len = 1000000;
-	let message = "";
-	for(let i = 0; i < len; i++) message += "a";
-	res.send(message);
-});
-
-const httpUtil = require('./util/common/http');
-app.get('/poc2', (req, res, next) => {
-	httpUtil.get('https://android.pratilipi.com/init?language=HINDI').then((data) => res.json(data)).catch((err) => res.json({message: 'call failed.'}));
-});
-
-app.get('/poc3', (req, res, next) => {
-	res.json({message: 'OK'});
-});
-
-app.get('/poc4', (req, res, next) => {
-    // len
-    let len = req.query.len ? parseInt(req.query.len) : 1;
-    if (len > 1000000) len = 1000000;
-
-    // message
-    let message = "This is a sample log...";
-    if (req.query.message) message = req.query.message;
-    try {
-        message = JSON.parse(decodeURIComponent(message));
-    } catch(e) {
-        // do nothing
-        console.log('could not parse json');
-    }
-
-    // stringify
-    let stringify = false;
-    if (req.query.stringify === "true") stringify = true;
-    if (stringify && typeof(message) === 'object') message = JSON.stringify(message);
-
-    // time it
-    let x = Date.now();
-	for(let i = 0; i < len; i++) console.log(message);
-	let y = Date.now();
-	console.log(`Time taken to print ${len} logs = ${y-x} ms`);
-    res.json({time: `${y-x} ms`, len: `${len}`});
-
-});
-/* ----------------------- POC ----------------------- */
-
-
+// AccessToken Filter
+app.use(accessTokenFilter);
 
 // Redirection Filter(s)
 app.use(hostRedirectionFilter);
 app.use(pathRedirectionFilter);
-
-// Crawler Filter
-app.use(crawlerFilter);
-
-// Internal developers only
-app.use('/internal/stats', internalStatsFilter);
-
-// AccessToken Filter
-app.use(accessTokenFilter);
 
 // Bucket Filter
 app.use(bucketFilter);
@@ -136,14 +92,12 @@ res.locals:
     stack = growth / product
 */
 
-// Logging
-app.use((req, res, next) => {
-    console.log(`DEBUG :: ${decodeURIComponent(req.originalUrl)} :: ${req.headers['user-agent']} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['total-growth-buckets']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
-    next();
-});
 
 // Pipe request to response
 app.get('*', (req, res, next) => {
+
+    // Logging
+    console.log(`DEBUG :: ${decodeURIComponent(req.originalUrl)} :: ${req.headers['user-agent']} :: ${res.locals['access-token']} :: ${res.locals['bucket-id']} :: ${res.locals['total-growth-buckets']} :: ${res.locals['version']} :: ${res.locals['stack']}`);
 
     // Local Environment - Send the data
     if (stage === 'local') {
