@@ -15,6 +15,7 @@ const
     accessTokenFilter = require('./filter/accessToken'),
     hostRedirectionFilter = require('./filter/hostRedirection'),
     pathRedirectionFilter = require('./filter/pathRedirection'),
+    resourceFilter = require('./filter/resource'),
     bucketFilter = require('./filter/bucket'),
     versionFilter= require('./filter/version'),
     stackFilter = require('./filter/stack');
@@ -73,6 +74,7 @@ app.use(accessTokenFilter);
 // Redirection Filter(s)
 app.use(hostRedirectionFilter);
 app.use(pathRedirectionFilter);
+app.use(resourceFilter);
 
 // Bucket Filter
 app.use(bucketFilter);
