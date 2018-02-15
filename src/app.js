@@ -48,10 +48,6 @@ app.use('/internal/stats', internalStatsRouter);
 // Poc
 if (stage === 'local' || stage === 'devo') app.use('/poc', pocRouter);
 
-// Crawlers
-app.use(crawlerRouter);
-
-
 // Users
 // trust proxy
 app.enable('trust proxy');
@@ -69,6 +65,9 @@ app.delete('*', (req, res, next) => res.status(400).json({message: 'Nooooooooooo
 
 // AccessToken Filter
 app.use(accessTokenFilter);
+
+// Crawlers
+app.use(crawlerRouter);
 
 // Redirection Filter(s)
 app.use(hostRedirectionFilter);
