@@ -14,8 +14,8 @@ const StageConfig = {
 		ECS_ENDPOINT: process.env.API_ENDPOINT ? process.env.API_ENDPOINT.split(':')[0] : process.env.API_END_POINT.split(':')[0],
 		GCP_ENDPOINT: 'https://devo-pratilipi.appspot.com',
 		REDIS: {
-			HOST: process.env.MASTER_REDIS_ENDPOINT || 'devo-ecs.e6ocw5.0001.apse1.cache.amazonaws.com',
-			PORT: process.env.MASTER_REDIS_ENDPOINT ? 6379 : 8080,
+			HOST: process.env.MASTER_REDIS_ENDPOINT,
+			PORT: process.env.MASTER_REDIS_PORT,
 			DB: 10
 		},
 		PORT: process.env.SERVICE_PORT,
@@ -25,8 +25,8 @@ const StageConfig = {
 		ECS_ENDPOINT: process.env.API_ENDPOINT ? process.env.API_ENDPOINT.split(':')[0] : process.env.API_END_POINT.split(':')[0],
 		GCP_ENDPOINT: 'https://gae-gamma.pratilipi.com',
 		REDIS: {
-			HOST: process.env.MASTER_REDIS_ENDPOINT || 'prod-ecs.cpzshl.ng.0001.apse1.cache.amazonaws.com',
-			PORT: process.env.MASTER_REDIS_ENDPOINT ? 6379 : 8080,
+			HOST: process.env.MASTER_REDIS_ENDPOINT,
+			PORT: process.env.MASTER_REDIS_PORT,
 			DB: 10
 		},
 		PORT: process.env.SERVICE_PORT,
@@ -36,8 +36,8 @@ const StageConfig = {
 		ECS_ENDPOINT: process.env.API_ENDPOINT ? process.env.API_ENDPOINT.split(':')[0] : process.env.API_END_POINT.split(':')[0],
 		GCP_ENDPOINT: 'https://gae-prod.pratilipi.com',
 		REDIS: {
-			HOST: process.env.MASTER_REDIS_ENDPOINT || 'prod-ecs.cpzshl.ng.0001.apse1.cache.amazonaws.com',
-			PORT: process.env.MASTER_REDIS_ENDPOINT ? 6379 : 8080,
+			HOST: process.env.MASTER_REDIS_ENDPOINT,
+			PORT: process.env.MASTER_REDIS_PORT,
 			DB: 10
 		},
 		PORT: process.env.SERVICE_PORT,
