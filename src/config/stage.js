@@ -15,7 +15,7 @@ const StageConfig = {
 		GCP_ENDPOINT: 'https://devo-pratilipi.appspot.com',
 		REDIS: {
 			HOST: process.env.MASTER_REDIS_ENDPOINT,
-			PORT: process.env.MASTER_REDIS_ENDPOINT,
+			PORT: process.env.MASTER_REDIS_PORT,
 			DB: 10
 		},
 		PORT: process.env.SERVICE_PORT,
@@ -37,7 +37,7 @@ const StageConfig = {
 		GCP_ENDPOINT: 'https://gae-prod.pratilipi.com',
 		REDIS: {
 			HOST: process.env.MASTER_REDIS_ENDPOINT,
-			PORT: process.env.MASTER_REDIS_ENDPOINT,
+			PORT: process.env.MASTER_REDIS_PORT,
 			DB: 10
 		},
 		PORT: process.env.SERVICE_PORT,
