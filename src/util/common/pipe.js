@@ -20,26 +20,39 @@ const PipeUtil = function() {
 
     const SERVICE = {
         MINI_G: {
+            NAME: 'MINI_G',
             PORT: '82'
         },
         MINI_P: {
+            NAME: 'MINI_P',
             PORT: '81'
         },
         WEB_G: {
+            NAME: 'WEB_G',
             PORT: '84'
         },
         WEB_P: {
+            NAME: 'WEB_P',
             PORT: '83'
         }
     };
 
     const _getPort = (service, stage=`${process.env.STAGE || 'local'}`) => {
-        switch (stage) {
-            case 'devo': return '10' + service.PORT;
-            case 'gamma': return '80' + service.PORT;
-            case 'prod': return '' + service.PORT;
-            default: return '80' + service.PORT;
-        }
+        // Mumbai
+        // switch (stage) {
+        //     case 'devo': return '10' + service.PORT;
+        //     case 'gamma': return '80' + service.PORT;
+        //     case 'prod': return '' + service.PORT;
+        //     default: return '80' + service.PORT;
+        // }
+        // Singapore
+        switch (service.NAME) {
+            case 'MINI_G': return '81';
+            case 'MINI_P': return '81';
+            case 'WEB_G': return '8081';
+            case 'WEB_P': return '8080';
+            default: return '8080';
+        };
     };
 
     const self = this;
