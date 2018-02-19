@@ -58,6 +58,4 @@ const StageConfig = {
 	}
 };
 
-console.log(StageConfig);
-
 module.exports = StageConfig[`${process.env.STAGE || 'local'}`];
