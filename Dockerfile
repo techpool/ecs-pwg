@@ -1,5 +1,4 @@
-FROM $DOCKER_REPO/ubuntu:16.04
-ENV NODE_ENV=production
+FROM 370531249777.dkr.ecr.ap-south-1.amazonaws.com/ubuntu:16.04
 
 # Install essentials
 RUN apt-get update && \
@@ -48,11 +47,8 @@ COPY package-lock.json .
 COPY src src
 COPY server.js .
 COPY worker.js .
+COPY start.sh .
 
 # Installing node dependencies
 RUN npm install
 EXPOSE 80
-
-# Starting nginx and node server
-COPY start.sh .
-CMD ["bash", "start.sh"]
