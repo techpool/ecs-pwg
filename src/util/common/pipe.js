@@ -38,20 +38,11 @@ const PipeUtil = function() {
     };
 
     const _getPort = (service, stage=`${process.env.STAGE || 'local'}`) => {
-        // Mumbai
-        // switch (stage) {
-        //     case 'devo': return '10' + service.PORT;
-        //     case 'gamma': return '80' + service.PORT;
-        //     case 'prod': return '' + service.PORT;
-        //     default: return '80' + service.PORT;
-        // }
-        // Singapore
-        switch (service.NAME) {
-            case 'MINI_G': return '81';
-            case 'MINI_P': return '81';
-            case 'WEB_G': return '8081';
-            case 'WEB_P': return '8080';
-            default: return '8080';
+        switch (stage) {
+            case 'devo': return '10' + service.PORT;
+            case 'gamma': return '80' + service.PORT;
+            case 'prod': return '' + service.PORT;
+            default: return '80' + service.PORT;
         };
     };
 
