@@ -1,3 +1,16 @@
+const _getEcsEndPoint = (apiEndpoint) => {
+	// local testing
+	if (apiEndpoint === undefined)
+		return 'localhost';
+	// http:// protocol missing
+	if (! apiEndpoint.startsWith('http://'))
+		apiEndpoint = 'http://' + apiEndpoint;
+	// Removing port number
+	if (apiEndpoint.split(':').length === 3)
+		apiEndpoint = apiEndpoint.split(':').slice(0, -1).join(':');
+	return apiEndpoint;
+};
+
 const StageConfig = {
     local: {
 		ECS_ENDPOINT: 'https://tamil-gamma.pratilipi.com/api',
@@ -11,7 +24,7 @@ const StageConfig = {
 		DOMAIN: 'localhost'
 	},
 	devo: {
-		ECS_ENDPOINT: process.env.API_ENDPOINT ? process.env.API_ENDPOINT.split(':')[0] : process.env.API_END_POINT.split(':')[0],
+		ECS_ENDPOINT: _getEcsEndPoint(process.env.API_ENDPOINT || process.env.API_ENDPOINT),
 		GCP_ENDPOINT: 'https://devo-pratilipi.appspot.com',
 		REDIS: {
 			HOST: process.env.MASTER_REDIS_ENDPOINT,
@@ -22,7 +35,7 @@ const StageConfig = {
 		DOMAIN: '.ptlp.co'
 	},
 	gamma: {
-		ECS_ENDPOINT: process.env.API_ENDPOINT ? process.env.API_ENDPOINT.split(':')[0] : process.env.API_END_POINT.split(':')[0],
+		ECS_ENDPOINT: _getEcsEndPoint(process.env.API_ENDPOINT || process.env.API_ENDPOINT),
 		GCP_ENDPOINT: 'https://gae-gamma.pratilipi.com',
 		REDIS: {
 			HOST: process.env.MASTER_REDIS_ENDPOINT,
@@ -33,7 +46,7 @@ const StageConfig = {
 		DOMAIN: '.pratilipi.com'
 	},
 	prod: {
-		ECS_ENDPOINT: process.env.API_ENDPOINT ? process.env.API_ENDPOINT.split(':')[0] : process.env.API_END_POINT.split(':')[0],
+		ECS_ENDPOINT: _getEcsEndPoint(process.env.API_ENDPOINT || process.env.API_ENDPOINT),
 		GCP_ENDPOINT: 'https://gae-prod.pratilipi.com',
 		REDIS: {
 			HOST: process.env.MASTER_REDIS_ENDPOINT,
