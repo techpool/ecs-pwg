@@ -29,7 +29,7 @@ const StageConfig = {
 		REDIS: {
 			HOST: process.env.MASTER_REDIS_ENDPOINT,
 			PORT: process.env.MASTER_REDIS_PORT,
-			DB: 10
+			DB: process.env.MASTER_REDIS_DB
 		},
 		PORT: process.env.SERVICE_PORT,
 		DOMAIN: '.ptlp.co'
@@ -40,7 +40,7 @@ const StageConfig = {
 		REDIS: {
 			HOST: process.env.MASTER_REDIS_ENDPOINT,
 			PORT: process.env.MASTER_REDIS_PORT,
-			DB: 10
+			DB: process.env.MASTER_REDIS_DB
 		},
 		PORT: process.env.SERVICE_PORT,
 		DOMAIN: '.pratilipi.com'
@@ -51,7 +51,7 @@ const StageConfig = {
 		REDIS: {
 			HOST: process.env.MASTER_REDIS_ENDPOINT,
 			PORT: process.env.MASTER_REDIS_PORT,
-			DB: 10
+			DB: process.env.MASTER_REDIS_DB
 		},
 		PORT: process.env.SERVICE_PORT,
 		DOMAIN: '.pratilipi.com'
