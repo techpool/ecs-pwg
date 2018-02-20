@@ -99,6 +99,98 @@ const HostConfig = {
     },
 
 
+    // production - mumbai - chrome
+    "www-mum.pratilipi.com": {
+        LANGUAGE: Language.ENGLISH,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "hindi-mum.pratilipi.com": {
+        LANGUAGE: Language.HINDI,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 100,
+            GROWTH: 20
+        }
+    },
+
+    "gujarati-mum.pratilipi.com": {
+        LANGUAGE: Language.GUJARATI,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 100,
+            GROWTH: 20
+        }
+    },
+
+    "bengali-mum.pratilipi.com": {
+        LANGUAGE: Language.BENGALI,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 100,
+            GROWTH: 20
+        }
+    },
+
+    "marathi-mum.pratilipi.com": {
+        LANGUAGE: Language.MARATHI,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 100,
+            GROWTH: 20
+        }
+    },
+
+    "tamil-mum.pratilipi.com": {
+        LANGUAGE: Language.TAMIL,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 100,
+            GROWTH: 20
+        }
+    },
+
+    "telugu-mum.pratilipi.com": {
+        LANGUAGE: Language.TELUGU,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 100,
+            GROWTH: 20
+        }
+    },
+
+    "kannada-mum.pratilipi.com": {
+        LANGUAGE: Language.KANNADA,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 100,
+            GROWTH: 20
+        }
+    },
+
+    "malayalam-mum.pratilipi.com": {
+        LANGUAGE: Language.MALAYALAM,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 100,
+            GROWTH: 20
+        }
+    },
+
+
     // production - uc mini
     "m.pratilipi.com": {
         LANGUAGE: Language.ENGLISH,
@@ -181,6 +273,98 @@ const HostConfig = {
     },
 
     "ml.pratilipi.com": {
+        LANGUAGE: Language.MALAYALAM,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+
+    // production - uc mini
+    "m-mum.pratilipi.com": {
+        LANGUAGE: Language.ENGLISH,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "hi-mum.pratilipi.com": {
+        LANGUAGE: Language.HINDI,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "gu-mum.pratilipi.com": {
+        LANGUAGE: Language.GUJARATI,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "bn-mum.pratilipi.com": {
+        LANGUAGE: Language.BENGALI,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "mr-mum.pratilipi.com": {
+        LANGUAGE: Language.MARATHI,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "ta-mum.pratilipi.com": {
+        LANGUAGE: Language.TAMIL,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "te-mum.pratilipi.com": {
+        LANGUAGE: Language.TELUGU,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "kn-mum.pratilipi.com": {
+        LANGUAGE: Language.KANNADA,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "ml-mum.pratilipi.com": {
         LANGUAGE: Language.MALAYALAM,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
@@ -283,6 +467,98 @@ const HostConfig = {
     },
 
 
+    // gamma - product - mumbai - chrome
+    "www-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.ENGLISH,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "hindi-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.HINDI,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "gujarati-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.GUJARATI,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "bengali-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.BENGALI,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "marathi-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.MARATHI,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "tamil-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.TAMIL,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "telugu-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.TELUGU,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "kannada-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.KANNADA,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "malayalam-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.MALAYALAM,
+        VERSION: Version.PWA,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+
     // gamma - product - uc mini
     "m-gamma.pratilipi.com": {
         LANGUAGE: Language.ENGLISH,
@@ -365,6 +641,98 @@ const HostConfig = {
     },
 
     "ml-gamma.pratilipi.com": {
+        LANGUAGE: Language.MALAYALAM,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+
+    // gamma - mumbai - product - uc mini
+    "m-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.ENGLISH,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "hi-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.HINDI,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "gu-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.GUJARATI,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "bn-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.BENGALI,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "mr-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.MARATHI,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "ta-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.TAMIL,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "te-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.TELUGU,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "kn-mum-gamma.pratilipi.com": {
+        LANGUAGE: Language.KANNADA,
+        VERSION: Version.MINI,
+        TTL_DAYS: 7,
+        BUCKET: {
+            TOTAL: 1,
+            GROWTH: 0
+        }
+    },
+
+    "ml-mum-gamma.pratilipi.com": {
         LANGUAGE: Language.MALAYALAM,
         VERSION: Version.MINI,
         TTL_DAYS: 7,
