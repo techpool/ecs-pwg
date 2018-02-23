@@ -84,7 +84,7 @@ const PipeUtil = function() {
         self.pipe(req, res, Object.assign({}, options, {'uri': stageConfig.ECS_ENDPOINT + ':' + _getPort(SERVICE.MINI_P)+ req.originalUrl}));
 
     self.pipeToWebG = (req, res, options) =>
-        self.pipe(req, res, Object.assign({}, options, {'uri': stageConfig.ECS_ENDPOINT + ':' + _getPort(SERVICE.WEB_G) + req.originalUrl}));
+        self.pipe(req, res, Object.assign({}, options, {'uri': stageConfig.GROWTH_ECS_ENDPOINT + ':' + _getPort(SERVICE.WEB_G) + req.originalUrl}));
 
     self.pipeToWebP = (req, res, options) =>
         self.pipe(req, res, Object.assign({}, options, {'uri': stageConfig.ECS_ENDPOINT + ':' + _getPort(SERVICE.WEB_P) + req.originalUrl}));

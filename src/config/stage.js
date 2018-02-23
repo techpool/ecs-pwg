@@ -14,6 +14,7 @@ const _getEcsEndPoint = (apiEndpoint) => {
 const StageConfig = {
     local: {
 		ECS_ENDPOINT: 'https://tamil-gamma.pratilipi.com/api',
+		GROWTH_ECS_ENDPOINT: 'https://tamil-gamma.pratilipi.com/api',
 		GCP_ENDPOINT: 'https://devo-pratilipi.appspot.com',
 		REDIS: {
 			HOST: 'localhost',
@@ -25,6 +26,7 @@ const StageConfig = {
 	},
 	devo: {
 		ECS_ENDPOINT: _getEcsEndPoint(process.env.API_ENDPOINT || process.env.API_END_POINT),
+		GROWTH_ECS_ENDPOINT: 'http://internal-growth-1365734759.ap-south-1.elb.amazonaws.com',
 		GCP_ENDPOINT: 'https://devo-pratilipi.appspot.com',
 		REDIS: {
 			HOST: process.env.MASTER_REDIS_ENDPOINT,
@@ -36,6 +38,7 @@ const StageConfig = {
 	},
 	gamma: {
 		ECS_ENDPOINT: _getEcsEndPoint(process.env.API_ENDPOINT || process.env.API_END_POINT),
+		GROWTH_ECS_ENDPOINT: _getEcsEndPoint(process.env.API_ENDPOINT || process.env.API_END_POINT),
 		GCP_ENDPOINT: 'https://gae-gamma.pratilipi.com',
 		REDIS: {
 			HOST: process.env.MASTER_REDIS_ENDPOINT,
@@ -47,6 +50,7 @@ const StageConfig = {
 	},
 	prod: {
 		ECS_ENDPOINT: _getEcsEndPoint(process.env.API_ENDPOINT || process.env.API_END_POINT),
+		GROWTH_ECS_ENDPOINT: _getEcsEndPoint(process.env.API_ENDPOINT || process.env.API_END_POINT),
 		GCP_ENDPOINT: 'https://gae-prod.pratilipi.com',
 		REDIS: {
 			HOST: process.env.MASTER_REDIS_ENDPOINT,
