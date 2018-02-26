@@ -66,13 +66,13 @@ app.delete('*', (req, res, next) => res.status(400).json({message: 'Nooooooooooo
 // AccessToken Filter
 app.use(accessTokenFilter);
 
-// Crawlers
-app.use(crawlerRouter);
-
 // Redirection Filter(s)
 app.use(hostRedirectionFilter);
 app.use(pathRedirectionFilter);
 app.use(resourceFilter);
+
+// Crawlers
+app.use(crawlerRouter);
 
 // Bucket Filter
 app.use(bucketFilter);
