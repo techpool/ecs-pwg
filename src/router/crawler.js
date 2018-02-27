@@ -65,10 +65,14 @@ router.get('/*', (req, res, next) => {
         isCrawler = true;
     }
 
-    if (isCrawler)
+    if (isCrawler) {
+        // Crawler logging
+        console.log(`CRAWLER :: ${decodeURIComponent(req.originalUrl)} :: ${req.headers['user-agent']} :: ${res.locals['access-token']}`);
         return pipeUtil.pipeToMiniP(req, res, {
             headers: Object.assign(req.headers, {'Access-Token': res.locals["access-token"]})
         });
+    }
+        
 
     return next();
 
