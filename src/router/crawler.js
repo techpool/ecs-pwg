@@ -72,7 +72,6 @@ router.get('/*', (req, res, next) => {
             headers: Object.assign(req.headers, {'Access-Token': res.locals["access-token"]})
         });
     }
-        
 
     return next();
 
