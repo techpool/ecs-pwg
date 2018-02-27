@@ -52,8 +52,10 @@ router.get('/*', (req, res, next) => {
         isCrawler = true;
 
     } else if (userAgent === "facebot" ||
-        userAgent.startsWith("facebookexternalhit/1.0") ||
-        userAgent.startsWith("facebookexternalhit/1.1")) { // Facebook Scraping requests
+        userAgent.startsWith("facebookexternalhit")) { // Facebook Scraping requests
+        isCrawler = true;
+
+    } else if (userAgent.startsWith("Twitterbot")) { // Twitter
         isCrawler = true;
 
     } else if (userAgent.startsWith("WhatsApp")) { // Whatsapp
