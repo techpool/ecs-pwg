@@ -19,7 +19,7 @@ const
 	_isPathEqualSlug = (path, slug) => decodeURIComponent(path) === slug;
 	
 const
-	_blockedMiniPratilipiIds = [6755373518739047];
+	_blockedMiniPratilipiIds = [6755373518739047, 6755373518740583, 6755373518741880];
 
 
 // _getHostName('TAMIL', 'm.pratilipi.com') => ta.pratilipi.com
