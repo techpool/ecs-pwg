@@ -81,8 +81,7 @@ router.use(async(req, res, next) => {
 			_blockedMiniPratilipiIds.includes(pratilipi.pratilipiId) &&
 			hostConfig[req.headers.host].VERSION === Version.MINI) {
 
-			const hostToRedirect = pratilipi.language ? _getHostName(pratilipi.language, req.headers.host) : req.headers.host;
-			return res.redirect(301, (req.secure ? 'https://' : 'http://') + hostToRedirect + '/download-app');
+			return res.redirect(301, (req.secure ? 'https://' : 'http://') + req.headers.host + '/download-app');
 		}
 
 		// Redirecting to updated url
@@ -108,8 +107,7 @@ router.use(async(req, res, next) => {
 			_blockedMiniPratilipiIds.includes(pratilipi.pratilipiId) &&
 			hostConfig[req.headers.host].VERSION === Version.MINI) {
 
-			const hostToRedirect = pratilipi.language ? _getHostName(pratilipi.language, req.headers.host) : req.headers.host;
-			return res.redirect(301, (req.secure ? 'https://' : 'http://') + hostToRedirect + '/download-app');
+			return res.redirect(301, (req.secure ? 'https://' : 'http://') + req.headers.host + '/download-app');
 		}
 
 		// Redirecting to updated language
