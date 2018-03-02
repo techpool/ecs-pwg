@@ -16,7 +16,10 @@ const
 
 const
     _getSlugFromPath = (path) => path.split('/').pop().split('-').pop(),
-    _isPathEqualSlug = (path, slug) => decodeURIComponent(path) === slug;
+	_isPathEqualSlug = (path, slug) => decodeURIComponent(path) === slug;
+	
+const
+	_blockedMiniPratilipiIds = [6755373518739047];
 
 
 // _getHostName('TAMIL', 'm.pratilipi.com') => ta.pratilipi.com
@@ -69,12 +72,53 @@ router.use(async(req, res, next) => {
 // Pratilipi Slug Redirections
 router.use(async(req, res, next) => {
 	if (req.path.startsWith('/story/') && req.path.count('/') === 2) {
-        const pratilipi = await dataAccessor.getPratilipiBySlug(req.headers.host, _getSlugFromPath(req.path), res.locals['access-token']).catch(() => null);
+
+		const pratilipi = await dataAccessor.getPratilipiBySlug(req.headers.host, _getSlugFromPath(req.path), res.locals['access-token']).catch(() => null);
+
+		// Block some contents only on mini
+		if (pratilipi && 
+			pratilipi.pratilipiId && 
+			_blockedMiniPratilipiIds.includes(pratilipi.pratilipiId) &&
+			hostConfig[req.headers.host].VERSION === Version.MINI) {
+
+			const hostToRedirect = pratilipi.language ? _getHostName(pratilipi.language, req.headers.host) : req.headers.host;
+			return res.redirect(301, (req.secure ? 'https://' : 'http://') + hostToRedirect + '/download-app');
+		}
+
+		// Redirecting to updated url
 		if (pratilipi && pratilipi.pageUrl && pratilipi.language) {
 			if (_isPathEqualSlug(req.path, pratilipi.pageUrl) && hostConfig[req.headers.host].LANGUAGE.NAME === pratilipi.language)
 				return next('router'); // valid path
 			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(pratilipi.language, req.headers.host) + req.originalUrl.replace(req.path, pratilipi.pageUrl));
 		}
+
+	}
+	next();
+});
+
+// Reader Redirections
+router.use(async(req, res, next) => {
+	if (req.path === '/read' && req.query['id']) {
+
+		const pratilipi = await dataAccessor.getPratilipiById(req.headers.host, req.query['id'], res.locals['access-token']).catch(() => null);
+
+		// Block some contents only on mini
+		if (pratilipi && 
+			pratilipi.pratilipiId && 
+			_blockedMiniPratilipiIds.includes(pratilipi.pratilipiId) &&
+			hostConfig[req.headers.host].VERSION === Version.MINI) {
+
+			const hostToRedirect = pratilipi.language ? _getHostName(pratilipi.language, req.headers.host) : req.headers.host;
+			return res.redirect(301, (req.secure ? 'https://' : 'http://') + hostToRedirect + '/download-app');
+		}
+
+		// Redirecting to updated language
+		if (pratilipi && pratilipi.language) {
+			if (hostConfig[req.headers.host].LANGUAGE.NAME === pratilipi.language)
+				return next('router'); // valid path
+			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(pratilipi.language, req.headers.host) + req.originalUrl);
+		}
+
 	}
 	next();
 });
@@ -91,6 +135,8 @@ router.use(async(req, res, next) => {
 	}
 	next();
 });
+
+
 
 //// Page Redirections - From old url to slug urls
 router.use(async(req, res, next) => {
