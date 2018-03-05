@@ -15,11 +15,11 @@ const
 	Version = require('./../enum/version');
 
 const
+	_blockedMiniPratilipiIds = require('./../config/blockedMiniContentIds');
+
+const
     _getSlugFromPath = (path) => path.split('/').pop().split('-').pop(),
 	_isPathEqualSlug = (path, slug) => decodeURIComponent(path) === slug;
-	
-const
-	_blockedMiniPratilipiIds = [6755373518739047, 6755373518740583, 6755373518741880];
 
 
 // _getHostName('TAMIL', 'm.pratilipi.com') => ta.pratilipi.com
