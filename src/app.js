@@ -59,7 +59,7 @@ app.use(morgan("short"));
 app.use(cookieParser());
 
 // prerender
-app.use(require('prerender-node'));
+// app.use(require('prerender-node'));
 
 // Disabling all post, patch and delete
 app.post('*', (req, res, next) => res.status(400).json({message: 'Huh! Nice try!'}));
