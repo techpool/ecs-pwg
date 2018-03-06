@@ -21,6 +21,10 @@ router.get(['/sitemap', '/robots.txt'], (req, res, next) =>
 // Crawlers - only for prod and gamma env
 router.get('/*', (req, res, next) => {
 
+    // Remove prod stage check
+    if (stage !== 'prod')
+        return next();
+
     const userAgent = req.get('User-Agent');
     let isCrawler = false;
 
