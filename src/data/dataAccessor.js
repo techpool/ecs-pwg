@@ -1,5 +1,6 @@
 const
-	_           = require('lodash');
+	_           = require('lodash'),
+	fs			= require('fs');
 
 const
 	redis = require('./../util/common/redis')['client'];
@@ -125,7 +126,7 @@ DataAccessor.prototype.clearDb = async() => {
 	;
 };
 
-
+// Services
 DataAccessor.prototype.validateAccessToken = (host, accessToken, userAgent) =>
 	userServiceUtil.validateAccessToken(host, accessToken, userAgent);
 
@@ -149,5 +150,10 @@ DataAccessor.prototype.getEventBySlug = (host, slug, accessToken) =>
 
 DataAccessor.prototype.getEventById = (host, eventId, accessToken) =>
 	eventServiceUtil.getById(host, eventId, accessToken);
+
+
+// Local
+DataAccessor.prototype.getRobotsTxt = (stage) => 
+	fs.readFileSync(`${__dirname}/robotsTxt/${stage}`);
 
 module.exports = new DataAccessor();

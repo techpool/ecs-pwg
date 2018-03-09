@@ -6,10 +6,15 @@ const
     stage = process.env.STAGE || 'local',
     stageConfig = require('./../config/stage');
 
+
 const
-    pipeUtil = require('./../util/common/pipe');
+    // pipeUtil = require('./../util/common/pipe'),
+    dataAccessor = require('./../data/dataAccessor');
 
+// robots.txt
+router.get('/robots.txt', (req, res, next) => res.send(dataAccessor.getRobotsTxt(stage)));
 
+/*
 // robots.txt, sitemap
 router.get(['/sitemap', '/robots.txt'], (req, res, next) =>
 	pipeUtil.pipe(req, res, {
@@ -18,7 +23,6 @@ router.get(['/sitemap', '/robots.txt'], (req, res, next) =>
 	})
 );
 
-/*
 // Crawlers - only for prod and gamma env
 router.get('/*', (req, res, next) => {
 
