@@ -23,22 +23,34 @@ router.use((req, res, next) => {
 		return next();
 	if (req.secure)
 		return next();
-	return res.redirect(301, 'https://' + req.headers.host + req.originalUrl);
+
+	const originalUrl = req.protocol + '://' + req.headers.host + req.originalUrl,
+		  redirectUrl = 'https://' + req.headers.host + req.originalUrl;
+	console.log(`301_REDIRECT :: ${originalUrl} :: ${redirectUrl}`);
+	return res.redirect(301, redirectUrl);
 });
 
 
 // https://www.hindi.pratilipi.com -> https://hindi.pratilipi.com
 router.use((req, res, next) => {
-	if (req.headers.host.startsWith('www.') && hostConfig[req.headers.host.substring('www.'.length)])
-		return res.redirect(301, (req.secure ? 'https://' : 'http://') + req.headers.host.substring('www.'.length) + req.originalUrl);
+	if (req.headers.host.startsWith('www.') && hostConfig[req.headers.host.substring('www.'.length)]) {
+		const originalUrl = req.protocol + '://' + req.headers.host + req.originalUrl,
+			  redirectUrl = (req.secure ? 'https://' : 'http://') + req.headers.host.substring('www.'.length) + req.originalUrl;
+		console.log(`301_REDIRECT :: ${originalUrl} :: ${redirectUrl}`);
+		return res.redirect(301, redirectUrl);
+	}
 	return next();
 });
 
 
 // If nothing matches, redirect to pratilipi.com
 router.use((req, res, next) => {
-	if (!hostConfig[req.headers.host])
-		return res.redirect(301, (req.secure ? 'https://' : 'http://') + 'www.pratilipi.com/?redirect=ecs');
+	if (!hostConfig[req.headers.host]) {
+		const originalUrl = req.protocol + '://' + req.headers.host + req.originalUrl,
+			  redirectUrl = (req.secure ? 'https://' : 'http://') + 'www.pratilipi.com/?redirect=ecs' + '&host=' + req.headers.host;
+		console.log(`301_REDIRECT :: ${originalUrl} :: ${redirectUrl}`);
+		return res.redirect(301, redirectUrl);
+	}
 	return next();
 });
 
@@ -152,8 +164,12 @@ router.use((req, res, next) => {
 	}
 
 
-	if (basicBrowser)
-		return res.redirect(307, (req.secure ? 'https://' : 'http://') + redirectHost + req.originalUrl);
+	if (basicBrowser) {
+		const originalUrl = req.protocol + '://' + req.headers.host + req.originalUrl,
+			  redirectUrl = (req.secure ? 'https://' : 'http://') + redirectHost + req.originalUrl;
+		console.log(`307_REDIRECT :: ${originalUrl} :: ${redirectUrl}`);
+		return res.redirect(307, redirectUrl);
+	}
 
 	return next();
 

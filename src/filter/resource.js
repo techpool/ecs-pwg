@@ -63,7 +63,11 @@ router.use(async(req, res, next) => {
 		if (author && author.slug && author.language) {
 			if (_isPathEqualSlug(req.path, author.slug) && hostConfig[req.headers.host].LANGUAGE.NAME === author.language)
 				return next('router'); // valid path
-			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(author.language, req.headers.host) + req.originalUrl.replace(req.path, author.slug));
+
+			const originalUrl = req.protocol + '://' + req.headers.host + req.originalUrl,
+				  redirectUrl = (req.secure ? 'https://' : 'http://') + _getHostName(author.language, req.headers.host) + req.originalUrl.replace(req.path, author.slug);
+		  	console.log(`301_REDIRECT :: ${originalUrl} :: ${redirectUrl}`);
+		  	return res.redirect(301, redirectUrl);
 		}
 	}
 	next();
@@ -81,14 +85,21 @@ router.use(async(req, res, next) => {
 			_blockedMiniPratilipiIds.includes(pratilipi.pratilipiId) &&
 			hostConfig[req.headers.host].VERSION === Version.MINI) {
 
-			return res.redirect(301, (req.secure ? 'https://' : 'http://') + req.headers.host + '/download-app');
+			const originalUrl = req.protocol + '://' + req.headers.host + req.originalUrl,
+				  redirectUrl = (req.secure ? 'https://' : 'http://') + req.headers.host + '/download-app';
+			console.log(`301_REDIRECT :: ${originalUrl} :: ${redirectUrl}`);
+			return res.redirect(301, redirectUrl);
 		}
 
 		// Redirecting to updated url
 		if (pratilipi && pratilipi.pageUrl && pratilipi.language) {
 			if (_isPathEqualSlug(req.path, pratilipi.pageUrl) && hostConfig[req.headers.host].LANGUAGE.NAME === pratilipi.language)
 				return next('router'); // valid path
-			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(pratilipi.language, req.headers.host) + req.originalUrl.replace(req.path, pratilipi.pageUrl));
+
+			const originalUrl = req.protocol + '://' + req.headers.host + req.originalUrl,
+				  redirectUrl = (req.secure ? 'https://' : 'http://') + _getHostName(pratilipi.language, req.headers.host) + req.originalUrl.replace(req.path, pratilipi.pageUrl);
+		  	console.log(`301_REDIRECT :: ${originalUrl} :: ${redirectUrl}`);
+			return res.redirect(301, redirectUrl);
 		}
 
 	}
@@ -107,14 +118,21 @@ router.use(async(req, res, next) => {
 			_blockedMiniPratilipiIds.includes(pratilipi.pratilipiId) &&
 			hostConfig[req.headers.host].VERSION === Version.MINI) {
 
-			return res.redirect(301, (req.secure ? 'https://' : 'http://') + req.headers.host + '/download-app');
+			const originalUrl = req.protocol + '://' + req.headers.host + req.originalUrl,
+				  redirectUrl = (req.secure ? 'https://' : 'http://') + req.headers.host + '/download-app';
+		  	console.log(`301_REDIRECT :: ${originalUrl} :: ${redirectUrl}`);
+			return res.redirect(301, redirectUrl);
 		}
 
 		// Redirecting to updated language
 		if (pratilipi && pratilipi.language) {
 			if (hostConfig[req.headers.host].LANGUAGE.NAME === pratilipi.language)
 				return next('router'); // valid path
-			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(pratilipi.language, req.headers.host) + req.originalUrl);
+
+			const originalUrl = req.protocol + '://' + req.headers.host + req.originalUrl,
+					redirectUrl = (req.secure ? 'https://' : 'http://') + _getHostName(pratilipi.language, req.headers.host) + req.originalUrl;
+			console.log(`301_REDIRECT :: ${originalUrl} :: ${redirectUrl}`);
+			return res.redirect(301, redirectUrl);
 		}
 
 	}
@@ -128,7 +146,11 @@ router.use(async(req, res, next) => {
 		if (event && event.slug && event.language) {
 			if (_isPathEqualSlug(req.path, event.slug) && hostConfig[req.headers.host].LANGUAGE.NAME === event.language)
 				return next('router'); // valid path
-			return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(event.language, req.headers.host) + req.originalUrl.replace(req.path, event.slug));
+
+			const originalUrl = req.protocol + '://' + req.headers.host + req.originalUrl,
+				  redirectUrl = (req.secure ? 'https://' : 'http://') + _getHostName(event.language, req.headers.host) + req.originalUrl.replace(req.path, event.slug);
+		  	console.log(`301_REDIRECT :: ${originalUrl} :: ${redirectUrl}`);
+			return res.redirect(301, redirectUrl);
 		}
 	}
 	next();
@@ -204,8 +226,12 @@ router.use(async(req, res, next) => {
 			break;
 	}
 
-	if (language && slug)
-		return res.redirect(301, (req.secure ? 'https://' : 'http://') + _getHostName(language, req.headers.host) + req.originalUrl.replace(req.path, slug));
+	if (language && slug) {
+		const originalUrl = req.protocol + '://' + req.headers.host + req.originalUrl,
+			  redirectUrl = (req.secure ? 'https://' : 'http://') + _getHostName(language, req.headers.host) + req.originalUrl.replace(req.path, slug);
+		console.log(`301_REDIRECT :: ${originalUrl} :: ${redirectUrl}`);
+		return res.redirect(301, redirectUrl);
+	}
 
 	next();
 
