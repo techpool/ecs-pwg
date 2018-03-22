@@ -750,7 +750,7 @@ const HostConfig = {
         TTL_DAYS: 7,
         BUCKET: {
             TOTAL: 100,
-            GROWTH: 20
+            GROWTH: 100
         }
     },
 
@@ -760,7 +760,7 @@ const HostConfig = {
         TTL_DAYS: 7,
         BUCKET: {
             TOTAL: 100,
-            GROWTH: 20
+            GROWTH: 100
         }
     },
 
@@ -770,7 +770,7 @@ const HostConfig = {
         TTL_DAYS: 7,
         BUCKET: {
             TOTAL: 100,
-            GROWTH: 20
+            GROWTH: 100
         }
     },
 
@@ -780,7 +780,7 @@ const HostConfig = {
         TTL_DAYS: 7,
         BUCKET: {
             TOTAL: 100,
-            GROWTH: 20
+            GROWTH: 100
         }
     },
 
@@ -790,7 +790,7 @@ const HostConfig = {
         TTL_DAYS: 7,
         BUCKET: {
             TOTAL: 100,
-            GROWTH: 20
+            GROWTH: 100
         }
     },
 
@@ -800,7 +800,7 @@ const HostConfig = {
         TTL_DAYS: 7,
         BUCKET: {
             TOTAL: 100,
-            GROWTH: 20
+            GROWTH: 100
         }
     },
 
@@ -810,7 +810,7 @@ const HostConfig = {
         TTL_DAYS: 7,
         BUCKET: {
             TOTAL: 100,
-            GROWTH: 20
+            GROWTH: 100
         }
     },
 
@@ -820,7 +820,7 @@ const HostConfig = {
         TTL_DAYS: 7,
         BUCKET: {
             TOTAL: 100,
-            GROWTH: 20
+            GROWTH: 100
         }
     },
 
